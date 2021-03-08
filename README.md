@@ -24,5 +24,9 @@ Confirm visualization in ROS works by running rviz
 ```console
 rviz
 ```
-##
+
+Install dependencies for FLIR Camera ROS Driver
+```console
+sudo apt install ros-melodic-image-exposure-msgs ros-melodic-wfov-camera-msgs
+```
  

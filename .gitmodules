@@ -1,0 +1,3 @@
+[submodule "freebuoyancy_gazebo"]
+	path = freebuoyancy_gazebo
+	url = https://github.com/bluerobotics/freebuoyancy_gazebo.git

@@ -38,8 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    @attention Copyright (C) 2018
 */
 
-#ifndef SPINNAKER_CAMERA_DRIVER_DIAGNOSTICS_H
-#define SPINNAKER_CAMERA_DRIVER_DIAGNOSTICS_H
+#pragma once
 
 #include <diagnostic_msgs/DiagnosticArray.h>
 #include <diagnostic_msgs/DiagnosticStatus.h>
@@ -66,17 +65,16 @@ class DiagnosticsManager {
    * Take all the collected parameters that were added read the values, then
    * publish them to the
    * allow the diagnostics aggreagtor to collect them
-   * \param spinnaker the SpinnakerCamera object used for getting the parameters
-   * from the spinnaker API
+   * \param spinnaker the SpinnakerCamera object used for getting the
+   * parameters from the spinnaker API
    */
   void processDiagnostics(SpinnakerCamera* spinnaker);
 
   /*!
    * \brief Add a diagnostic with name only (no warning checks)
    *
-   * Allows the user to add an integer or float parameter without having to give
-   * additional information.
-   * User must specify the type they are getting
+   * Allows the user to add an integer or float parameter without having to
+   * give additional information. User must specify the type they are getting
    * \param name is the name of the parameter as writting in the User Manual
    */
   template <typename T>
@@ -85,9 +83,8 @@ class DiagnosticsManager {
   /*!
    * \brief Add a diagnostic with warning checks
    *
-   * Allows the user to add an integer or float parameter and values to check it
-   * against. Anything outside
-   * of these ranges will be considered an error.
+   * Allows the user to add an integer or float parameter and values to check
+   * it against. Anything outside of these ranges will be considered an error.
    * \param name is the name of the parameter as writting in the User Manual
    */
   void addDiagnostic(const Spinnaker::GenICam::gcstring name,
@@ -120,9 +117,8 @@ class DiagnosticsManager {
   /*!
    * \brief Function to push the diagnostic to the publisher
    *
-   * Allows the user to add an integer or float parameter without having to give
-   * additional information.
-   * User must specify the type they are getting
+   * Allows the user to add an integer or float parameter without having to
+   * give additional information. User must specify the type they are getting
    * \param param is the diagnostic parameter name and boundaries
    * \param value is the current value of the parameter requested from the
    * device
@@ -150,5 +146,3 @@ class DiagnosticsManager {
   // clang-format on
 };
 }  // namespace spinnaker_camera_driver
-
-#endif  // SPINNAKER_CAMERA_DRIVER_DIAGNOSTICS_H

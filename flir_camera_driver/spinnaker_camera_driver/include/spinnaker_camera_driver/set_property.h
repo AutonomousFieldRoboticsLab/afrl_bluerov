@@ -27,10 +27,8 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef SPINNAKER_CAMERA_DRIVER_SET_PROPERTY_H
-#define SPINNAKER_CAMERA_DRIVER_SET_PROPERTY_H
+#pragma once
 
-// Spinnaker SDK
 #include <string>
 
 #include "SpinGenApi/SpinnakerGenApi.h"
@@ -56,7 +54,7 @@ inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
   if (!Spinnaker::GenApi::IsImplemented(enumerationPtr)) {
     ROS_ERROR_STREAM("[SpinnakerCamera]: ("
                      << static_cast<Spinnaker::GenApi::CStringPtr>(
-                            node_map->GetNode("DeviceID"))
+                            node_map->GetNode("DeviceSerialNumber"))
                             ->GetValue()
                      << ") Enumeration name " << property_name
                      << " not "
@@ -75,7 +73,7 @@ inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
 
           ROS_INFO_STREAM("[SpinnakerCamera]: ("
                           << static_cast<Spinnaker::GenApi::CStringPtr>(
-                                 node_map->GetNode("DeviceID"))
+                                 node_map->GetNode("DeviceSerialNumber"))
                                  ->GetValue()
                           << ") " << property_name << " set to "
                           << enumerationPtr->GetCurrentEntry()->GetSymbolic()
@@ -85,14 +83,14 @@ inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
         } else {
           ROS_WARN_STREAM("[SpinnakerCamera]: ("
                           << static_cast<Spinnaker::GenApi::CStringPtr>(
-                                 node_map->GetNode("DeviceID"))
+                                 node_map->GetNode("DeviceSerialNumber"))
                                  ->GetValue()
                           << ") Entry name " << entry_name << " not writable.");
         }
       } else {
         ROS_WARN_STREAM("[SpinnakerCamera]: ("
                         << static_cast<Spinnaker::GenApi::CStringPtr>(
-                               node_map->GetNode("DeviceID"))
+                               node_map->GetNode("DeviceSerialNumber"))
                                ->GetValue()
                         << ") Entry name " << entry_name << " not available.");
 
@@ -110,14 +108,14 @@ inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
     } else {
       ROS_WARN_STREAM("[SpinnakerCamera]: ("
                       << static_cast<Spinnaker::GenApi::CStringPtr>(
-                             node_map->GetNode("DeviceID"))
+                             node_map->GetNode("DeviceSerialNumber"))
                              ->GetValue()
                       << ") Enumeration " << property_name << " not writable.");
     }
   } else {
     ROS_WARN_STREAM("[SpinnakerCamera]: ("
                     << static_cast<Spinnaker::GenApi::CStringPtr>(
-                           node_map->GetNode("DeviceID"))
+                           node_map->GetNode("DeviceSerialNumber"))
                            ->GetValue()
                     << ") Enumeration " << property_name << " not available.");
   }
@@ -133,7 +131,7 @@ inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
   if (!Spinnaker::GenApi::IsImplemented(floatPtr)) {
     ROS_ERROR_STREAM("[SpinnakerCamera]: ("
                      << static_cast<Spinnaker::GenApi::CStringPtr>(
-                            node_map->GetNode("DeviceID"))
+                            node_map->GetNode("DeviceSerialNumber"))
                             ->GetValue()
                      << ") Feature name " << property_name
                      << " not implemented.");
@@ -149,7 +147,7 @@ inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
       floatPtr->SetValue(temp_value);
       ROS_INFO_STREAM("[SpinnakerCamera]: ("
                       << static_cast<Spinnaker::GenApi::CStringPtr>(
-                             node_map->GetNode("DeviceID"))
+                             node_map->GetNode("DeviceSerialNumber"))
                              ->GetValue()
                       << ") " << property_name << " set to "
                       << floatPtr->GetValue() << ".");
@@ -157,14 +155,14 @@ inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
     } else {
       ROS_WARN_STREAM("[SpinnakerCamera]: ("
                       << static_cast<Spinnaker::GenApi::CStringPtr>(
-                             node_map->GetNode("DeviceID"))
+                             node_map->GetNode("DeviceSerialNumber"))
                              ->GetValue()
                       << ") Feature " << property_name << " not writable.");
     }
   } else {
     ROS_WARN_STREAM("[SpinnakerCamera]: ("
                     << static_cast<Spinnaker::GenApi::CStringPtr>(
-                           node_map->GetNode("DeviceID"))
+                           node_map->GetNode("DeviceSerialNumber"))
                            ->GetValue()
                     << ") Feature " << property_name << " not available.");
   }
@@ -179,7 +177,7 @@ inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
   if (!Spinnaker::GenApi::IsImplemented(boolPtr)) {
     ROS_ERROR_STREAM("[SpinnakerCamera]: ("
                      << static_cast<Spinnaker::GenApi::CStringPtr>(
-                            node_map->GetNode("DeviceID"))
+                            node_map->GetNode("DeviceSerialNumber"))
                             ->GetValue()
                      << ") Feature name " << property_name
                      << " not implemented.");
@@ -190,7 +188,7 @@ inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
       boolPtr->SetValue(value);
       ROS_INFO_STREAM("[SpinnakerCamera]: ("
                       << static_cast<Spinnaker::GenApi::CStringPtr>(
-                             node_map->GetNode("DeviceID"))
+                             node_map->GetNode("DeviceSerialNumber"))
                              ->GetValue()
                       << ") " << property_name << " set to "
                       << boolPtr->GetValue() << ".");
@@ -198,14 +196,14 @@ inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
     } else {
       ROS_WARN_STREAM("[SpinnakerCamera]: ("
                       << static_cast<Spinnaker::GenApi::CStringPtr>(
-                             node_map->GetNode("DeviceID"))
+                             node_map->GetNode("DeviceSerialNumber"))
                              ->GetValue()
                       << ") Feature " << property_name << " not writable.");
     }
   } else {
     ROS_WARN_STREAM("[SpinnakerCamera]: ("
                     << static_cast<Spinnaker::GenApi::CStringPtr>(
-                           node_map->GetNode("DeviceID"))
+                           node_map->GetNode("DeviceSerialNumber"))
                            ->GetValue()
                     << ") Feature " << property_name << " not available.");
   }
@@ -220,7 +218,7 @@ inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
   if (!Spinnaker::GenApi::IsImplemented(intPtr)) {
     ROS_ERROR_STREAM("[SpinnakerCamera]: ("
                      << static_cast<Spinnaker::GenApi::CStringPtr>(
-                            node_map->GetNode("DeviceID"))
+                            node_map->GetNode("DeviceSerialNumber"))
                             ->GetValue()
                      << ") Feature name " << property_name
                      << " not implemented.");
@@ -236,7 +234,7 @@ inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
       intPtr->SetValue(temp_value);
       ROS_INFO_STREAM("[SpinnakerCamera]: ("
                       << static_cast<Spinnaker::GenApi::CStringPtr>(
-                             node_map->GetNode("DeviceID"))
+                             node_map->GetNode("DeviceSerialNumber"))
                              ->GetValue()
                       << ") " << property_name << " set to "
                       << intPtr->GetValue() << ".");
@@ -244,14 +242,14 @@ inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
     } else {
       ROS_WARN_STREAM("[SpinnakerCamera]: ("
                       << static_cast<Spinnaker::GenApi::CStringPtr>(
-                             node_map->GetNode("DeviceID"))
+                             node_map->GetNode("DeviceSerialNumber"))
                              ->GetValue()
                       << ") Feature " << property_name << " not writable.");
     }
   } else {
     ROS_WARN_STREAM("[SpinnakerCamera]: ("
                     << static_cast<Spinnaker::GenApi::CStringPtr>(
-                           node_map->GetNode("DeviceID"))
+                           node_map->GetNode("DeviceSerialNumber"))
                            ->GetValue()
                     << ") Feature " << property_name << " not available.");
   }
@@ -268,7 +266,7 @@ inline bool setMaxInt(Spinnaker::GenApi::INodeMap* node_map,
       intPtr->SetValue(intPtr->GetMax());
       ROS_INFO_STREAM("[SpinnakerCamera]: ("
                       << static_cast<Spinnaker::GenApi::CStringPtr>(
-                             node_map->GetNode("DeviceID"))
+                             node_map->GetNode("DeviceSerialNumber"))
                              ->GetValue()
                       << ") " << property_name << " set to "
                       << intPtr->GetValue() << ".");
@@ -276,18 +274,17 @@ inline bool setMaxInt(Spinnaker::GenApi::INodeMap* node_map,
     } else {
       ROS_WARN_STREAM("[SpinnakerCamera]: ("
                       << static_cast<Spinnaker::GenApi::CStringPtr>(
-                             node_map->GetNode("DeviceID"))
+                             node_map->GetNode("DeviceSerialNumber"))
                              ->GetValue()
                       << ") Feature " << property_name << " not writable.");
     }
   } else {
     ROS_WARN_STREAM("[SpinnakerCamera]: ("
                     << static_cast<Spinnaker::GenApi::CStringPtr>(
-                           node_map->GetNode("DeviceID"))
+                           node_map->GetNode("DeviceSerialNumber"))
                            ->GetValue()
                     << ") Feature " << property_name << " not available.");
   }
   return false;
 }
 }  // namespace spinnaker_camera_driver
-#endif  // SPINNAKER_CAMERA_DRIVER_SET_PROPERTY_H

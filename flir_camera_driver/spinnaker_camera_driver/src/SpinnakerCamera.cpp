@@ -48,6 +48,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <ros/ros.h>
 
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -62,6 +63,16 @@ SpinnakerCamera::SpinnakerCamera()
       camera_(nullptr),
       captureRunning_(false) {
   system_ = Spinnaker::System::GetInstance();
+
+  const Spinnaker::LibraryVersion spinnakerLibraryVersion =
+      system_->GetLibraryVersion();
+  ROS_INFO_STREAM("Spinnaker library version: "
+                  << spinnakerLibraryVersion.major << "."
+                  << spinnakerLibraryVersion.minor << "."
+                  << spinnakerLibraryVersion.type << "."
+                  << spinnakerLibraryVersion.build);
+
+  ROS_INFO_STREAM("Retreiving list of cameras...");
   camList_ = system_->GetCameras();
   unsigned int num_cameras = camList_.GetSize();
   ROS_INFO_STREAM_ONCE(
@@ -73,9 +84,36 @@ SpinnakerCamera::~SpinnakerCamera() {
   system_->ReleaseInstance();
 }
 
+void SpinnakerCamera::checkUSBMemory() {
+  // Check USB Memory
+  int mem;
+  std::ifstream usb_mem("/sys/module/usbcore/parameters/usbfs_memory_mb");
+  if (usb_mem) {
+    usb_mem >> mem;
+    if (mem >= 1000)
+      ROS_INFO_STREAM("[ OK ] USB memory: " << mem << " MB");
+    else {
+      ROS_FATAL_STREAM(
+          "  USB memory on system too low ("
+          << mem
+          << " MB)! Must be at least 1000 MB. Run: \nsudo sh -c \"echo 1000 "
+             "> /sys/module/usbcore/parameters/usbfs_memory_mb\"\n "
+             "Terminating...");
+      ros::shutdown();
+    }
+  } else {
+    ROS_FATAL_STREAM("Could not check USB memory on system! Terminating...");
+    ros::shutdown();
+  }
+}
+
 void SpinnakerCamera::setNewConfiguration(
     const spinnaker_camera_driver::SpinnakerConfig& config,
     const uint32_t& level) {
+  if (!pCam_) {
+    SpinnakerCamera::checkUSBMemory();
+  }
+
   // Check if camera is connected
   if (!pCam_) {
     SpinnakerCamera::connect();
@@ -162,7 +200,7 @@ void SpinnakerCamera::connect() {
       if (serial_ == 0) {
         Spinnaker::GenApi::CStringPtr serial_ptr =
             static_cast<Spinnaker::GenApi::CStringPtr>(
-                genTLNodeMap.GetNode("DeviceID"));
+                genTLNodeMap.GetNode("DeviceSerialNumber"));
         if (IsAvailable(serial_ptr) && IsReadable(serial_ptr)) {
           serial_ = atoi(serial_ptr->GetValue().c_str());
           ROS_INFO("[SpinnakerCamera::connect]: Using Serial: %i", serial_);

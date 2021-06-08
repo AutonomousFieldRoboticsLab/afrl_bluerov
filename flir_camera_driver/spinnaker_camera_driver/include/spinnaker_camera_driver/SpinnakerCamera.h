@@ -44,8 +44,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    @attention Carnegie Mellon University
 */
 
-#ifndef SPINNAKER_CAMERA_DRIVER_SPINNAKERCAMERA_H
-#define SPINNAKER_CAMERA_DRIVER_SPINNAKERCAMERA_H
+#pragma once
 
 #include <sensor_msgs/Image.h>  // ROS message header for Image
 #include <sensor_msgs/fill_image.h>
@@ -77,11 +76,11 @@ class SpinnakerCamera {
   /*!
    * \brief Function that allows reconfiguration of the camera.
    *
-   * This function handles a reference of a camera_library::CameraConfig object
-   * and configures the camera as close to the given values as possible.  As a
-   * function for dynamic_reconfigure, values that are not valid are changed by
-   * the driver and can be inspected after this function ends. This function
-   * will stop and restart the camera when called on a
+   * This function handles a reference of a camera_library::CameraConfig
+   * object and configures the camera as close to the given values as
+   * possible.  As a function for dynamic_reconfigure, values that are not
+   * valid are changed by the driver and can be inspected after this function
+   * ends. This function will stop and restart the camera when called on a
    * SensorLevels::RECONFIGURE_STOP level. \param config
    * camera_library::CameraConfig object passed by reference.  Values will be
    * changed to those the driver is currently using. \param level
@@ -107,8 +106,8 @@ class SpinnakerCamera {
    * \brief Function that connects to a specified camera.
    *
    * Will connect to the camera specified in the setDesiredCamera(std::string
-   * id) call.  If setDesiredCamera is not called first this will connect to the
-   * first camera.  Connecting to the first camera is not recommended for
+   * id) call.  If setDesiredCamera is not called first this will connect to
+   * the first camera.  Connecting to the first camera is not recommended for
    * multi-camera or production systems. This function must be called before
    * setNewConfiguration() or start()!
    */
@@ -124,8 +123,8 @@ class SpinnakerCamera {
   /*!
    * \brief Starts the camera loading data into its buffer.
    *
-   * This function will start the camera capturing images and loading them into
-   * the buffer.  To retrieve images, grabImage must be called.
+   * This function will start the camera capturing images and loading them
+   * into the buffer.  To retrieve images, grabImage must be called.
    */
   void start();
 
@@ -150,21 +149,22 @@ class SpinnakerCamera {
   /*!
    * \brief Will set grabImage timeout for the camera.
    *
-   * This function will set the time required for grabCamera to throw a timeout
-   * exception.  Must be called after connect(). \param timeout The desired
-   * timeout value (in seconds)
+   * This function will set the time required for grabCamera to throw a
+   * timeout exception.  Must be called after connect(). \param timeout The
+   * desired timeout value (in seconds)
    *
    */
   // TODO(mhosmar): Implement later
   void setTimeout(const double& timeout);
 
   /*!
-   * \brief Used to set the serial number for the camera you wish to connect to.
+   * \brief Used to set the serial number for the camera you wish to connect
+   * to.
    *
-   * Sets the desired serial number.  If this value is not set, the driver will
-   * try to connect to the first camera on the bus. This function should be
-   * called before connect(). \param id serial number for the camera.  Should be
-   * something like 10491081.
+   * Sets the desired serial number.  If this value is not set, the driver
+   * will try to connect to the first camera on the bus. This function should
+   * be called before connect(). \param id serial number for the camera.
+   * Should be something like 10491081.
    */
   void setDesiredCamera(const uint32_t& id);
 
@@ -176,9 +176,11 @@ class SpinnakerCamera {
 
   uint32_t getSerial() { return serial_; }
 
+  static void checkUSBMemory();
+
  private:
-  uint32_t
-      serial_;  ///< A variable to hold the serial number of the desired camera.
+  uint32_t serial_;  ///< A variable to hold the serial number of the desired
+                     ///< camera.
 
   Spinnaker::SystemPtr system_;
   Spinnaker::CameraList camList_;
@@ -190,11 +192,11 @@ class SpinnakerCamera {
 
   Spinnaker::ChunkData image_metadata_;
 
-  std::mutex mutex_;  ///< A mutex to make sure that we don't try to grabImages
-                      ///< while reconfiguring or vice versa.
+  std::mutex mutex_;  ///< A mutex to make sure that we don't try to
+                      ///< grabImages while reconfiguring or vice versa.
   volatile bool
-      captureRunning_;  ///< A status boolean that checks if the camera has been
-                        ///< started and is loading images
+      captureRunning_;  ///< A status boolean that checks if the camera has
+                        ///< been started and is loading images
                         ///  into its buffer.
 
   /// If true, camera is currently running in color mode, otherwise camera is
@@ -214,9 +216,8 @@ class SpinnakerCamera {
 
   // This function configures the camera to add chunk data to each image. It
   // does this by enabling each type of chunk data before enabling chunk data
-  // mode. When chunk data is turned on, the data is made available in both the
-  // nodemap and each image.
+  // mode. When chunk data is turned on, the data is made available in both
+  // the nodemap and each image.
   void ConfigureChunkData(const Spinnaker::GenApi::INodeMap& nodeMap);
 };
 }  // namespace spinnaker_camera_driver
-#endif  // SPINNAKER_CAMERA_DRIVER_SPINNAKERCAMERA_H

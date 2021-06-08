@@ -27,8 +27,7 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef SPINNAKER_CAMERA_DRIVER_CAMERA_H
-#define SPINNAKER_CAMERA_DRIVER_CAMERA_H
+#pragma once
 
 #include <ros/ros.h>
 
@@ -84,9 +83,9 @@ class Camera {
   /*!
    * \brief Changes the video mode of the connected camera.
    *
-   * This function will change the camera to the desired videomode and allow up
-   * the maximum framerate for that mode. \param videoMode string of desired
-   * video mode, will be changed if unsupported.
+   * This function will change the camera to the desired videomode and allow
+   * up the maximum framerate for that mode. \param videoMode string of
+   * desired video mode, will be changed if unsupported.
    */
   virtual void setFrameRate(const float frame_rate);
   virtual void setImageControlFormats(
@@ -94,17 +93,17 @@ class Camera {
   /*!
    * \brief Set parameters relative to GigE cameras.
    *
-   * \param auto_packet_size Flag stating if packet size should be automatically
-   * determined or not. \param packet_size The packet size value to use if
-   * auto_packet_size is false.
+   * \param auto_packet_size Flag stating if packet size should be
+   * automatically determined or not. \param packet_size The packet size value
+   * to use if auto_packet_size is false.
    */
   // TODO(mhosmar): Implement later
   // void setGigEParameters(bool auto_packet_size, unsigned int packet_size,
   // unsigned int packet_delay);
 
   /*!
-   * \brief Will autoconfigure the packet size of the GigECamera with the given
-   * GUID.
+   * \brief Will autoconfigure the packet size of the GigECamera with the
+   * given GUID.
    *
    * Note that this is expected only to work for GigE cameras, and only if the
    * camera is not connected.
@@ -115,8 +114,8 @@ class Camera {
   // void setupGigEPacketSize(FlyCapture2::PGRGuid & guid);
 
   /*!
-   * \brief Will configure the packet size of the GigECamera with the given GUID
-   * to a given value.
+   * \brief Will configure the packet size of the GigECamera with the given
+   * GUID to a given value.
    *
    * Note that this is expected only to work for GigE cameras, and only if the
    * camera is not connected.
@@ -179,4 +178,3 @@ class Camera {
   // uint getROIPosition();
 };
 }  // namespace spinnaker_camera_driver
-#endif  // SPINNAKER_CAMERA_DRIVER_CAMERA_H

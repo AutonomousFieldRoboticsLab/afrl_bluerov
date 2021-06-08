@@ -44,8 +44,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    @attention Carnegie Mellon University
 */
 
-#ifndef SPINNAKER_CAMERA_DRIVER_CAMERA_EXCEPTIONS_H
-#define SPINNAKER_CAMERA_DRIVER_CAMERA_EXCEPTIONS_H
+#pragma once
 
 #include <stdexcept>
 #include <string>
@@ -73,5 +72,3 @@ class CameraImageNotReadyException : public std::runtime_error {
   explicit CameraImageNotReadyException(const std::string& msg)
       : runtime_error(msg.c_str()) {}
 };
-
-#endif  // SPINNAKER_CAMERA_DRIVER_CAMERA_EXCEPTIONS_H

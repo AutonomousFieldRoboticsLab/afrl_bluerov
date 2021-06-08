@@ -27,8 +27,8 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef SPINNAKER_CAMERA_DRIVER_GH3_H
-#define SPINNAKER_CAMERA_DRIVER_GH3_H
+#pragma once
+
 #include "spinnaker_camera_driver/camera.h"
 
 namespace spinnaker_camera_driver {
@@ -45,4 +45,3 @@ class Gh3 : public Camera {
       const spinnaker_camera_driver::SpinnakerConfig& config);
 };
 }  // namespace spinnaker_camera_driver
-#endif  // SPINNAKER_CAMERA_DRIVER_GH3_H

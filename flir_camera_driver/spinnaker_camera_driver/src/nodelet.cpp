@@ -338,10 +338,12 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
     pnh.param<double>("desired_freq", desired_freq, 30.0);
     pnh.param<double>("min_freq", min_freq_, desired_freq);
     pnh.param<double>("max_freq", max_freq_, desired_freq);
-    double
-        freq_tolerance;  // Tolerance before stating error on publish frequency,
-                         // fractional percent of desired frequencies.
+
+    // Tolerance before stating error on publish frequency,fractional percent of
+    // desired frequencies.
+    double freq_tolerance;
     pnh.param<double>("freq_tolerance", freq_tolerance, 0.1);
+
     int window_size;  // Number of samples to consider in frequency
     pnh.param<int>("window_size", window_size, 100);
     double min_acceptable;  // The minimum publishing delay (in seconds) before

@@ -57,8 +57,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
     </node>
 
     <!-- Debayering nodelet -->
-    <node pkg="nodelet" type="nodelet" name="image_proc_debayer"
-          args="load image_proc/debayer camera_nodelet_manager">
-    </node>
+    <!-- <node pkg="nodelet" type="nodelet" name="image_proc_debayer" -->
+          <!-- args="load image_proc/debayer camera_nodelet_manager"> -->
+    <!-- </node> -->
   </group>
 </launch>

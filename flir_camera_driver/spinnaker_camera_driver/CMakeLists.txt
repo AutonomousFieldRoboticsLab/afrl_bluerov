@@ -77,12 +77,17 @@ add_library(Gh3 src/gh3.cpp)
 target_link_libraries(Gh3 Camera ${catkin_LIBRARIES})
 add_dependencies(Gh3 ${PROJECT_NAME}_gencfg)
 
+add_library(BlueROVCamera src/BlueROVCamera.cpp)
+target_link_libraries(BlueROVCamera Camera ${catkin_LIBRARIES})
+add_dependencies(BlueROVCamera ${PROJECT_NAME}_gencfg)
+
+
 add_library(Diagnostics src/diagnostics.cpp)
 target_link_libraries(Diagnostics Camera SpinnakerCameraLib ${catkin_LIBRARIES})
 add_dependencies(Diagnostics ${PROJECT_NAME}_gencfg)
 
 add_library(SpinnakerCameraNodelet src/nodelet.cpp)
-target_link_libraries(SpinnakerCameraNodelet Diagnostics SpinnakerCameraLib Camera Gh3 Cm3 ${catkin_LIBRARIES})
+target_link_libraries(SpinnakerCameraNodelet Diagnostics SpinnakerCameraLib Camera Gh3 Cm3 BlueROVCamera ${catkin_LIBRARIES})
 
 add_executable(spinnaker_camera_node src/node.cpp)
 target_link_libraries(spinnaker_camera_node SpinnakerCameraLib ${catkin_LIBRARIES})
@@ -94,6 +99,7 @@ install(TARGETS
   Camera
   Cm3
   Gh3
+  BlueROVCamera
   Diagnostics
   spinnaker_camera_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

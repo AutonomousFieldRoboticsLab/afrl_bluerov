@@ -54,6 +54,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <typeinfo>
 
+#include "spinnaker_camera_driver/BlueROVCamera.h"
+
 namespace spinnaker_camera_driver {
 SpinnakerCamera::SpinnakerCamera()
     : serial_(0),
@@ -254,7 +256,10 @@ void SpinnakerCamera::connect() {
 
       ROS_INFO("[SpinnakerCamera::connect]: Camera model name: %s",
                model_name_str.c_str());
-      if (model_name_str.find("Blackfly S") != std::string::npos)
+      if (model_name_str.find("Blackfly S") != std::string::npos &&
+          bluerov_camera_)
+        camera_.reset(new BlueROVCamera(node_map_));
+      else if (model_name_str.find("Blackfly S") != std::string::npos)
         camera_.reset(new Camera(node_map_));
       else if (model_name_str.find("Chameleon3") != std::string::npos)
         camera_.reset(new Cm3(node_map_));

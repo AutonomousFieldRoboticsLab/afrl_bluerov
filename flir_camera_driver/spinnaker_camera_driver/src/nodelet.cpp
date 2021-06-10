@@ -281,13 +281,7 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
     pnh.param<std::string>("camera_info_url", camera_info_url, "");
     // Get the desired frame_id, set to 'camera' if not found
     pnh.param<std::string>("frame_id", frame_id_, "camera");
-
-    // Use custom bluerov camera configs
-    pnh.param<bool>("use_bluerov_config", use_bluerov_camera_config_, false);
-    spinnaker_.setBlueROVConfig(use_bluerov_camera_config_);
-
-    // Do not call the connectCb function until after we are done
-    // initializing.
+    // Do not call the connectCb function until after we are done initializing.
     std::lock_guard<std::mutex> scopedLock(connect_mutex_);
 
     // Start up the dynamic_reconfigure service, note that this needs to stick
@@ -680,8 +674,6 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
 
   /// Configuration:
   spinnaker_camera_driver::SpinnakerConfig config_;
-
-  bool use_bluerov_camera_config_;
 };
 
 PLUGINLIB_EXPORT_CLASS(spinnaker_camera_driver::SpinnakerCameraNodelet,

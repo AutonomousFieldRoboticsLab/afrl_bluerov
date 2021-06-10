@@ -168,10 +168,6 @@ class SpinnakerCamera {
    */
   void setDesiredCamera(const uint32_t& id);
 
-  inline void setBlueROVConfig(const bool& is_bluerov_camera) {
-    bluerov_camera_ = is_bluerov_camera;
-  }
-
   void setGain(const float& gain);
   int getHeightMax();
   int getWidthMax();
@@ -223,8 +219,5 @@ class SpinnakerCamera {
   // mode. When chunk data is turned on, the data is made available in both
   // the nodemap and each image.
   void ConfigureChunkData(const Spinnaker::GenApi::INodeMap& nodeMap);
-
-  // use custom bluerov configs
-  bool bluerov_camera_;
 };
 }  // namespace spinnaker_camera_driver

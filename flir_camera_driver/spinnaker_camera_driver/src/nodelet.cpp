@@ -263,20 +263,6 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
       serial = 0;
     }
 
-    std::string camera_serial_path;
-    pnh.param<std::string>("camera_serial_path", camera_serial_path, "");
-    NODELET_DEBUG_ONCE("Camera serial path %s", camera_serial_path.c_str());
-    // If serial has been provided directly as a param, ignore the path
-    // to read in the serial from.
-    while (serial == 0 && !camera_serial_path.empty()) {
-      serial = readSerialAsHexFromFile(camera_serial_path);
-      if (serial == 0) {
-        NODELET_WARN_ONCE("Waiting for camera serial path to become available");
-        ros::Duration(1.0).sleep();  // Sleep for 1 second, wait for serial
-                                     // device path to become available
-      }
-    }
-
     NODELET_DEBUG_ONCE("Using camera serial %d", serial);
 
     spinnaker_.setDesiredCamera((uint32_t)serial);
@@ -387,37 +373,6 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
         "PowerSupplyCurrent", true, std::make_pair(0.4f, 0.6f), 0.3f, 1.0f);
     diag_man->addDiagnostic<int>("DeviceUptime");
     diag_man->addDiagnostic<int>("U3VMessageChannelID");
-  }
-
-  /**
-   * @brief Reads in the camera serial from a specified file path.
-   * The format of the serial is expected to be base 16.
-   * @param camera_serial_path The path of where to read in the serial from.
-   * Generally this is a USB device path to the serial file.
-   * @return int The serial number for the given path, 0 if failure.
-   */
-  int readSerialAsHexFromFile(std::string camera_serial_path) {
-    NODELET_DEBUG_ONCE("Reading camera serial file from: %s",
-                       camera_serial_path.c_str());
-
-    std::ifstream serial_file(camera_serial_path.c_str());
-    std::stringstream buffer;
-    int serial = 0;
-
-    if (serial_file.is_open()) {
-      std::string serial_str((std::istreambuf_iterator<char>(serial_file)),
-                             std::istreambuf_iterator<char>());
-      NODELET_DEBUG_ONCE("Serial file contents: %s", serial_str.c_str());
-      buffer << std::hex << serial_str;
-      buffer >> serial;
-      NODELET_DEBUG_ONCE("Serial discovered %d", serial);
-
-      return serial;
-    }
-
-    NODELET_WARN_ONCE("Unable to open serial path: %s",
-                      camera_serial_path.c_str());
-    return 0;
   }
 
   void diagPoll() {

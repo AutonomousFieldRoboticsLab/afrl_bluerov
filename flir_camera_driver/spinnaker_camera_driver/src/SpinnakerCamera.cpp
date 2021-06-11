@@ -79,6 +79,22 @@ SpinnakerCamera::SpinnakerCamera()
   unsigned int num_cameras = camList_.GetSize();
   ROS_INFO_STREAM_ONCE(
       "[SpinnakerCamera]: Number of cameras detected: " << num_cameras);
+
+  // Setting pixel format bit length
+  bit_set_16.insert("BayerGR16");
+  bit_set_16.insert("BayerRG16");
+  bit_set_16.insert("BayerGB16");
+  bit_set_16.insert("BayerBG16");
+  bit_set_16.insert("Mono16");
+
+  bit_set_8.insert("BayerGR8");
+  bit_set_8.insert("BayerRG8");
+  bit_set_8.insert("BayerGB8");
+  bit_set_8.insert("BayerBG8");
+  bit_set_8.insert("Mono8");
+
+  bit_set_24.insert("BGR8");
+  bit_set_24.insert("RGB8Packed");
 }
 
 SpinnakerCamera::~SpinnakerCamera() {

@@ -1,9 +1,12 @@
 /**
 Software License Agreement (BSD)
 
-\file      camera.cpp
+\file      BlueROVCamera.h
 \authors   Michael Hosmar <mhosmar@clearpathrobotics.com>
+\authors   Bharat Joshi <bjoshi@email.sc.edu>
 \copyright Copyright (c) 2018, Clearpath Robotics, Inc., All rights reserved.
+\copyright Copyright (c) 2021, University of South Carolina., All rights
+reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -27,51 +30,21 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#include "spinnaker_camera_driver/camera.h"
 
-#include <string>
+#include "spinnaker_camera_driver/BlueROVCamera.h"
 
 namespace spinnaker_camera_driver {
-void Camera::init() {
-  Spinnaker::GenApi::CIntegerPtr height_max_ptr =
-      node_map_->GetNode("HeightMax");
-  if (!IsAvailable(height_max_ptr) || !IsReadable(height_max_ptr)) {
-    throw std::runtime_error("[Camera::init] Unable to read HeightMax");
-  }
-  height_max_ = height_max_ptr->GetValue();
-  Spinnaker::GenApi::CIntegerPtr width_max_ptr = node_map_->GetNode("WidthMax");
-  if (!IsAvailable(width_max_ptr) || !IsReadable(width_max_ptr)) {
-    throw std::runtime_error("[Camera::init] Unable to read WidthMax");
-  }
-  width_max_ = width_max_ptr->GetValue();
-  // Set Throughput to maximum
-  //=====================================
-  setMaxInt(node_map_, "DeviceLinkThroughputLimit");
-}
-void Camera::setFrameRate(const float frame_rate) {
-  // This enables the "AcquisitionFrameRateEnabled"
-  //======================================
-  setProperty(node_map_, "AcquisitionFrameRateEnable", true);
 
-  // This sets the "AcquisitionFrameRate" to X FPS
-  // ========================================
-
-  Spinnaker::GenApi::CFloatPtr ptrAcquisitionFrameRate =
-      node_map_->GetNode("AcquisitionFrameRate");
-  ROS_DEBUG_STREAM("Minimum Frame Rate: \t "
-                   << ptrAcquisitionFrameRate->GetMin());
-  ROS_DEBUG_STREAM("Maximum Frame rate: \t "
-                   << ptrAcquisitionFrameRate->GetMax());
-
-  // Finally Set the Frame Rate
-  setProperty(node_map_, "AcquisitionFrameRate", frame_rate);
-
-  ROS_DEBUG_STREAM("Current Frame rate: \t "
-                   << ptrAcquisitionFrameRate->GetValue());
+BlueROVCamera::BlueROVCamera(Spinnaker::GenApi::INodeMap* node_map)
+    : Camera(node_map) {
+  init();
+  pixel_format_ = "Mono8";
 }
 
-void Camera::setNewConfiguration(const SpinnakerConfig& config,
-                                 const uint32_t& level) {
+BlueROVCamera::~BlueROVCamera() {}
+
+void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
+                                        const uint32_t& level) {
   try {
     if (level >= LEVEL_RECONFIGURE_STOP) setImageControlFormats(config);
 
@@ -187,16 +160,50 @@ void Camera::setNewConfiguration(const SpinnakerConfig& config,
         "[Camera::setNewConfiguration] Failed to set configuration: " +
         std::string(e.what()));
   }
+
+  old_config_ = config;
+}
+
+/**
+ * @brief Sets sensor height, width and throughput during initialization.
+ * Oiginal implementation was using HeightMax and WidthMax property. But these
+ * attributes are calculated after binning, so do not actaully the maxmimum
+ * image size.
+ */
+
+void BlueROVCamera::init() {
+  // Modified by Bharat
+
+  Spinnaker::GenApi::CIntegerPtr sensor_height_ptr =
+      node_map_->GetNode("SensorHeight");
+  if (!IsAvailable(sensor_height_ptr) || !IsReadable(sensor_height_ptr)) {
+    throw std::runtime_error("[Camera::init] Unable to read SensorHeight");
+  }
+  height_max_ = sensor_height_ptr->GetValue();
+  Spinnaker::GenApi::CIntegerPtr sensor_width_ptr =
+      node_map_->GetNode("SensorWidth");
+  if (!IsAvailable(sensor_width_ptr) || !IsReadable(sensor_width_ptr)) {
+    throw std::runtime_error("[Camera::init] Unable to read SensorWidth");
+  }
+  width_max_ = sensor_width_ptr->GetValue();
 }
 
 // Image Size and Pixel Format
-void Camera::setImageControlFormats(
+void BlueROVCamera::setImageControlFormats(
     const spinnaker_camera_driver::SpinnakerConfig& config) {
-  // Set Binning, Decimation, and Reverse
-  setProperty(node_map_, "BinningHorizontal", config.image_format_binning);
-  setProperty(node_map_, "BinningVertical", config.image_format_binning);
-  setProperty(node_map_, "ReverseX", config.image_format_x_reverse);
-  setProperty(node_map_, "ReverseY", config.image_format_y_reverse);
+  // Set Binning, and Reverse
+  if (isConfigChanged("Binning", config)) {
+    setProperty(node_map_, "BinningHorizontal", config.image_format_binning);
+    setProperty(node_map_, "BinningVertical", config.image_format_binning);
+    setProperty(node_map_, "BinningSelector", binning_selector_);
+    setProperty(node_map_, "BinningHorizontalMode", binning_mode_);
+    setProperty(node_map_, "BinningVerticalMode", binning_mode_);
+  }
+
+  if (isConfigChanged("ReverseX", config))
+    setProperty(node_map_, "ReverseX", config.image_format_x_reverse);
+  if (isConfigChanged("ReverseY", config))
+    setProperty(node_map_, "ReverseY", config.image_format_y_reverse);
 
   // Grab the Max values after decimation
   Spinnaker::GenApi::CIntegerPtr height_max_ptr =
@@ -205,120 +212,81 @@ void Camera::setImageControlFormats(
     throw std::runtime_error(
         "[Camera::setImageControlFormats] Unable to read HeightMax");
   }
-  height_max_ = height_max_ptr->GetValue();
+  int height_max = height_max_ptr->GetValue();
   Spinnaker::GenApi::CIntegerPtr width_max_ptr = node_map_->GetNode("WidthMax");
   if (!IsAvailable(width_max_ptr) || !IsReadable(width_max_ptr)) {
     throw std::runtime_error(
         "[Camera::setImageControlFormats] Unable to read WidthMax");
   }
-  width_max_ = width_max_ptr->GetValue();
+  int width_max = width_max_ptr->GetValue();
 
   // Offset first encase expanding ROI
   // Apply offset X
-  setProperty(node_map_, "OffsetX", 0);
+  //   setProperty(node_map_, "OffsetX", 0);
   // Apply offset Y
-  setProperty(node_map_, "OffsetY", 0);
+  //   setProperty(node_map_, "OffsetY", 0);
 
   // Set Width/Height
-  // if (config.image_format_roi_width <= 0 ||
-  // config.image_format_roi_width > width_max_)
-  // setProperty(node_map_, "Width", width_max_);
-  // else
+  //   if (config.image_format_roi_width <= 0 ||
+  //   config.image_format_roi_width > width_max_)
+  if (width_max_ != width_max) {
+    width_max_ = width_max;
+    setProperty(node_map_, "Width", width_max_);
+  }
+  //   else
   // setProperty(node_map_, "Width", config.image_format_roi_width);
-  // if (config.image_format_roi_height <= 0 ||
-  // config.image_format_roi_height > height_max_)
-  // setProperty(node_map_, "Height", height_max_);
-  // else
+  //   if (config.image_format_roi_height <= 0 ||
+  //   config.image_format_roi_height > height_max_)
+  if (height_max_ != height_max) {
+    height_max_ = height_max;
+    setProperty(node_map_, "Height", height_max_);
+  }
+  //   else
   // setProperty(node_map_, "Height", config.image_format_roi_height);
 
   // Apply offset X
-  // setProperty(node_map_, "OffsetX", config.image_format_x_offset);
+  //   setProperty(node_map_, "OffsetX", config.image_format_x_offset);
   // Apply offset Y
-  // setProperty(node_map_, "OffsetY", config.image_format_y_offset);
+  //   setProperty(node_map_, "OffsetY", config.image_format_y_offset);
 
   // Set Pixel Format
-  setProperty(node_map_, "PixelFormat", config.image_format_color_coding);
+  if (isConfigChanged("PixelFormat", config))
+    setProperty(node_map_, "PixelFormat", config.image_format_color_coding);
 }
 
-void Camera::setGain(const float& gain) {
-  setProperty(node_map_, "GainAuto", "Off");
-  setProperty(node_map_, "Gain", static_cast<float>(gain));
-}
+bool BlueROVCamera::isConfigChanged(
+    const std::string& config_name,
+    const spinnaker_camera_driver::SpinnakerConfig& new_config) {
+  if (config_name == "Binning" &&
+      old_config_.image_format_binning != new_config.image_format_binning) {
+    ROS_DEBUG_STREAM("Binning changed from: "
+                     << old_config_.image_format_binning << " to: "
+                     << new_config.image_format_binning << std::endl);
 
-/*
-void Camera::setGigEParameters(bool auto_packet_size, unsigned int packet_size,
-unsigned int packet_delay)
-{
-}
-
-void Camera::setupGigEPacketSize(PGRGuid & guid)
-{
-}
-
-void Camera::setupGigEPacketSize(PGRGuid & guid, unsigned int packet_size)
-{
-
-}
-
-void Camera::setupGigEPacketDelay(PGRGuid & guid, unsigned int packet_delay)
-{
-}
-
-*/
-
-int Camera::getHeightMax() { return height_max_; }
-
-int Camera::getWidthMax() { return width_max_; }
-
-// uint SpinnakerCamera::getGain()
-// {
-//   return metadata_.embeddedGain >> 20;
-// }
-
-// uint Camera::getShutter()
-// {
-//   return metadata_.embeddedShutter >> 20;
-// }
-
-// uint Camera::getBrightness()
-// {
-//   return metadata_.embeddedTimeStamp >> 20;
-// }
-
-// uint Camera::getExposure()
-// {
-//   return metadata_.embeddedBrightness >> 20;
-// }
-
-// uint Camera::getWhiteBalance()
-// {
-//   return metadata_.embeddedExposure >> 8;
-// }
-
-// uint Camera::getROIPosition()
-// {
-//   return metadata_.embeddedROIPosition >> 24;
-// }
-
-// float Camera::getCameraTemperature()
-//{
-//}
-
-// float Camera::getCameraFrameRate()
-//{
-//}
-Spinnaker::GenApi::CNodePtr Camera::readProperty(
-    const Spinnaker::GenICam::gcstring property_name) {
-  Spinnaker::GenApi::CNodePtr ptr = node_map_->GetNode(property_name);
-  if (!Spinnaker::GenApi::IsAvailable(ptr) ||
-      !Spinnaker::GenApi::IsReadable(ptr)) {
-    throw std::runtime_error("Unable to get parmeter " + property_name);
+    return true;
+  } else if (config_name == "ReverseX" &&
+             old_config_.image_format_x_reverse !=
+                 new_config.image_format_x_reverse) {
+    if (new_config.image_format_x_reverse)
+      ROS_DEBUG_STREAM("Image is reversed in X direction\n");
+    else
+      ROS_DEBUG_STREAM("Image reverse corrected in X direction\n");
+    return true;
+  } else if (config_name == "ReverseY" &&
+             old_config_.image_format_y_reverse !=
+                 new_config.image_format_y_reverse) {
+    if (new_config.image_format_y_reverse)
+      ROS_DEBUG_STREAM("Image is reversed in Y direction\n");
+    else
+      ROS_DEBUG_STREAM("Image reverse corrected in Y direction\n");
+    return true;
+  } else if (config_name == "PixelFormat" &&
+             pixel_format_ != new_config.image_format_color_coding) {
+    ROS_DEBUG_STREAM("Image color encoding changed from: "
+                     << pixel_format_
+                     << " to: " << new_config.image_format_color_coding);
+    return true;
   }
-  return ptr;
-}
-
-Camera::Camera(Spinnaker::GenApi::INodeMap* node_map) {
-  node_map_ = node_map;
-  init();
+  return false;
 }
 }  // namespace spinnaker_camera_driver

@@ -174,7 +174,7 @@ void Cm3::setImageControlFormats(
   // Set Binning and Decimation
   // setProperty(node_map_, "BinningHorizontal", config.image_format_x_binning);
   // // Not available on CM3
-  setProperty(node_map_, "BinningVertical", config.image_format_y_binning);
+  setProperty(node_map_, "BinningVertical", config.image_format_binning);
   // setProperty(node_map_, "DecimationHorizontal",
   // config.image_format_x_decimation); setProperty(node_map_,
   // "DecimationVertical", config.image_format_y_decimation);
@@ -201,21 +201,21 @@ void Cm3::setImageControlFormats(
   setProperty(node_map_, "OffsetY", 0);
 
   // Set Width/Height
-  if (config.image_format_roi_width <= 0 ||
-      config.image_format_roi_width > width_max_)
-    setProperty(node_map_, "Width", width_max_);
-  else
-    setProperty(node_map_, "Width", config.image_format_roi_width);
-  if (config.image_format_roi_height <= 0 ||
-      config.image_format_roi_height > height_max_)
-    setProperty(node_map_, "Height", height_max_);
-  else
-    setProperty(node_map_, "Height", config.image_format_roi_height);
+  // if (config.image_format_roi_width <= 0 ||
+  //     config.image_format_roi_width > width_max_)
+  //   setProperty(node_map_, "Width", width_max_);
+  // else
+  //   setProperty(node_map_, "Width", config.image_format_roi_width);
+  // if (config.image_format_roi_height <= 0 ||
+  //     config.image_format_roi_height > height_max_)
+  //   setProperty(node_map_, "Height", height_max_);
+  // else
+  //   setProperty(node_map_, "Height", config.image_format_roi_height);
 
   // Apply offset X
-  setProperty(node_map_, "OffsetX", config.image_format_x_offset);
+  // setProperty(node_map_, "OffsetX", config.image_format_x_offset);
   // Apply offset Y
-  setProperty(node_map_, "OffsetY", config.image_format_y_offset);
+  // setProperty(node_map_, "OffsetY", config.image_format_y_offset);
 
   // Set Pixel Format
   setProperty(node_map_, "PixelFormat", config.image_format_color_coding);

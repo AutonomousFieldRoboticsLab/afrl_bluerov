@@ -125,34 +125,32 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
       wb_red_ = config.white_balance_red_ratio;
 
       // No separate param in CameraInfo for binning/decimation
-      binning_x_ =
-          config.image_format_x_binning * config.image_format_x_decimation;
-      binning_y_ =
-          config.image_format_y_binning * config.image_format_y_decimation;
+      binning_x_ = config.image_format_binning;
+      binning_y_ = config.image_format_binning;
 
       // Store CameraInfo RegionOfInterest information
-      // TODO(mhosmar): Not compliant with CameraInfo message: "A particular ROI
-      // always denotes the
-      //                same window of pixels on the camera sensor, regardless
-      //                of binning settings." These values are in the post
-      //                binned frame.
-      if ((config.image_format_roi_width + config.image_format_roi_height) >
-              0 &&
-          (config.image_format_roi_width < spinnaker_.getWidthMax() ||
-           config.image_format_roi_height < spinnaker_.getHeightMax())) {
-        roi_x_offset_ = config.image_format_x_offset;
-        roi_y_offset_ = config.image_format_y_offset;
-        roi_width_ = config.image_format_roi_width;
-        roi_height_ = config.image_format_roi_height;
-        do_rectify_ = true;  // Set to true if an ROI is used.
-      } else {
-        // Zeros mean the full resolution was captured.
-        roi_x_offset_ = 0;
-        roi_y_offset_ = 0;
-        roi_height_ = 0;
-        roi_width_ = 0;
-        do_rectify_ = false;  // Set to false if the whole image is captured.
-      }
+      // TODO(mhosmar): Not compliant with CameraInfo message: "A particular
+      // ROI always denotes the
+      //                same window of pixels on the camera sensor,
+      //                regardless of binning settings." These values are in
+      //                the post binned frame.
+      // if ((config.image_format_roi_width + config.image_format_roi_height) >
+      //         0 &&
+      //     (config.image_format_roi_width < spinnaker_.getWidthMax() ||
+      //      config.image_format_roi_height < spinnaker_.getHeightMax())) {
+      //   roi_x_offset_ = config.image_format_x_offset;
+      //   roi_y_offset_ = config.image_format_y_offset;
+      //   roi_width_ = config.image_format_roi_width;
+      //   roi_height_ = config.image_format_roi_height;
+      //   do_rectify_ = true;  // Set to true if an ROI is used.
+      // } else {
+      // Zeros mean the full resolution was captured.
+      roi_x_offset_ = 0;
+      roi_y_offset_ = 0;
+      roi_height_ = 0;
+      roi_width_ = 0;
+      do_rectify_ = false;  // Set to false if the whole image is captured.
+      // }
     } catch (std::runtime_error& e) {
       NODELET_ERROR("Reconfigure Callback failed with error: %s", e.what());
     }
@@ -180,60 +178,6 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
       pubThread_.reset(new boost::thread(boost::bind(
           &spinnaker_camera_driver::SpinnakerCameraNodelet::devicePoll, this)));
     }
-
-    // @tthomas - removing subscriber check and logic below as it's leading to
-    // mutex locks and crashes currently
-    /*
-    NODELET_DEBUG_ONCE("Connect callback!");
-    std::lock_guard<std::mutex> scopedLock(connect_mutex_); // Grab the mutex.
-    Wait until we're done initializing before letting this function through.
-    // Check if we should disconnect (there are 0 subscribers to our data)
-    if(it_pub_.getNumSubscribers() == 0 &&
-    pub_->getPublisher().getNumSubscribers() == 0)
-    {
-      if (pubThread_)
-      {
-        NODELET_DEBUG_ONCE("Disconnecting.");
-        pubThread_->interrupt();
-        scopedLock.unlock();
-        pubThread_->join();
-        scopedLock.lock();
-        pubThread_.reset();
-        sub_.shutdown();
-
-        try
-        {
-          NODELET_DEBUG_ONCE("Stopping camera capture.");
-          spinnaker_.stop();
-        }
-        catch(std::runtime_error& e)
-        {
-          NODELET_ERROR("%s", e.what());
-        }
-
-        try
-        {
-          NODELET_DEBUG_ONCE("Disconnecting from camera.");
-          spinnaker_.disconnect();
-        }
-        catch(std::runtime_error& e)
-        {
-          NODELET_ERROR("%s", e.what());
-        }
-      }
-    }
-    else if(!pubThread_)     // We need to connect
-    {
-      // Start the thread to loop through and publish messages
-      pubThread_.reset(new
-    boost::thread(boost::bind(&spinnaker_camera_driver::SpinnakerCameraNodelet::devicePoll,
-    this)));
-    }
-    else
-    {
-      NODELET_DEBUG_ONCE("Do nothing in callback.");
-    }
-    */
   }
 
   /*!
@@ -281,7 +225,13 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
     pnh.param<std::string>("camera_info_url", camera_info_url, "");
     // Get the desired frame_id, set to 'camera' if not found
     pnh.param<std::string>("frame_id", frame_id_, "camera");
-    // Do not call the connectCb function until after we are done initializing.
+
+    // Use custom bluerov camera configs
+    pnh.param<bool>("bluerov_camera", use_bluerov_camera_config_, false);
+    spinnaker_.setBlueROVCamera(use_bluerov_camera_config_);
+
+    // Do not call the connectCb function until after we are done
+    // initializing.
     std::lock_guard<std::mutex> scopedLock(connect_mutex_);
 
     // Start up the dynamic_reconfigure service, note that this needs to stick
@@ -376,10 +326,8 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
   }
 
   void diagPoll() {
-    while (!boost::this_thread::interruption_requested())  // Block until we
-                                                           // need to stop this
-                                                           // thread.
-    {
+    // Block until we need to stop this thread.
+    while (!boost::this_thread::interruption_requested()) {
       diag_man->processDiagnostics(&spinnaker_);
     }
   }
@@ -674,6 +622,8 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
 
   /// Configuration:
   spinnaker_camera_driver::SpinnakerConfig config_;
+
+  bool use_bluerov_camera_config_;
 };
 
 PLUGINLIB_EXPORT_CLASS(spinnaker_camera_driver::SpinnakerCameraNodelet,

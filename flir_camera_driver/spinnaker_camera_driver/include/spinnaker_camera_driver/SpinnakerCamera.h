@@ -178,9 +178,11 @@ class SpinnakerCamera {
 
   static void checkUSBMemory();
 
+  void setBlueROVCamera(const bool& bluerov_cam);
+
  private:
-  uint32_t serial_;  ///< A variable to hold the serial number of the desired
-                     ///< camera.
+  uint32_t serial_;  ///< A variable to hold the serial number of
+                     ///< the desired camera.
 
   Spinnaker::SystemPtr system_;
   Spinnaker::CameraList camList_;
@@ -219,5 +221,7 @@ class SpinnakerCamera {
   // mode. When chunk data is turned on, the data is made available in both
   // the nodemap and each image.
   void ConfigureChunkData(const Spinnaker::GenApi::INodeMap& nodeMap);
+
+  bool is_bluerov_camera_;
 };
 }  // namespace spinnaker_camera_driver

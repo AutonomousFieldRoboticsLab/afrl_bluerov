@@ -72,6 +72,8 @@ class Camera {
   Spinnaker::GenApi::CNodePtr readProperty(
       const Spinnaker::GenICam::gcstring property_name);
 
+  inline std::string getPixelFormat() { return pixel_format_; }
+
  protected:
   Spinnaker::GenApi::INodeMap* node_map_;
 
@@ -79,6 +81,8 @@ class Camera {
 
   int height_max_;
   int width_max_;
+
+  std::string pixel_format_;
 
   /*!
    * \brief Changes the video mode of the connected camera.

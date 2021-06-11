@@ -48,6 +48,8 @@ inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
   // entry node from the enumeration node, retrieve the integer value from
   // the entry node, and set the new value of the enumeration node with
   // the integer value from the entry node.
+
+  // ROS_DEBUG(" ********** String *******************");
   Spinnaker::GenApi::CEnumerationPtr enumerationPtr =
       node_map->GetNode(property_name.c_str());
 
@@ -125,6 +127,7 @@ inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
 inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
                         const std::string& property_name,
                         const float& value) {
+  // ROS_DEBUG(" ********** Float *******************");
   Spinnaker::GenApi::CFloatPtr floatPtr =
       node_map->GetNode(property_name.c_str());
 
@@ -172,6 +175,7 @@ inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
 inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
                         const std::string& property_name,
                         const bool& value) {
+  // ROS_DEBUG(" ********** Bool *******************");
   Spinnaker::GenApi::CBooleanPtr boolPtr =
       node_map->GetNode(property_name.c_str());
   if (!Spinnaker::GenApi::IsImplemented(boolPtr)) {
@@ -213,6 +217,7 @@ inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
 inline bool setProperty(Spinnaker::GenApi::INodeMap* node_map,
                         const std::string& property_name,
                         const int& value) {
+  // ROS_DEBUG(" ********** Int *******************");
   Spinnaker::GenApi::CIntegerPtr intPtr =
       node_map->GetNode(property_name.c_str());
   if (!Spinnaker::GenApi::IsImplemented(intPtr)) {

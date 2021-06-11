@@ -54,6 +54,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <typeinfo>
 
+#include "spinnaker_camera_driver/BlueROVCamera.h"
+
 namespace spinnaker_camera_driver {
 SpinnakerCamera::SpinnakerCamera()
     : serial_(0),
@@ -110,12 +112,10 @@ void SpinnakerCamera::checkUSBMemory() {
 void SpinnakerCamera::setNewConfiguration(
     const spinnaker_camera_driver::SpinnakerConfig& config,
     const uint32_t& level) {
-  if (!pCam_) {
-    SpinnakerCamera::checkUSBMemory();
-  }
-
   // Check if camera is connected
   if (!pCam_) {
+    // Check USB memory only the first time
+    SpinnakerCamera::checkUSBMemory();
     SpinnakerCamera::connect();
   }
 
@@ -254,7 +254,9 @@ void SpinnakerCamera::connect() {
 
       ROS_INFO("[SpinnakerCamera::connect]: Camera model name: %s",
                model_name_str.c_str());
-      if (model_name_str.find("Blackfly S") != std::string::npos)
+      if (is_bluerov_camera_)
+        camera_.reset(new BlueROVCamera(node_map_));
+      else if (model_name_str.find("Blackfly S") != std::string::npos)
         camera_.reset(new Camera(node_map_));
       else if (model_name_str.find("Chameleon3") != std::string::npos)
         camera_.reset(new Cm3(node_map_));
@@ -372,6 +374,8 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
 
         Spinnaker::GenICam::gcstring color_filter_str =
             color_filter_ptr->ToString();
+
+        ROS_DEBUG_STREAM("Pixel Color Filter: " << color_filter_str.c_str());
         Spinnaker::GenICam::gcstring bayer_rg_str = "BayerRG";
         Spinnaker::GenICam::gcstring bayer_gr_str = "BayerGR";
         Spinnaker::GenICam::gcstring bayer_gb_str = "BayerGB";
@@ -531,4 +535,9 @@ void SpinnakerCamera::ConfigureChunkData(
     throw std::runtime_error(e.what());
   }
 }
+
+void SpinnakerCamera::setBlueROVCamera(const bool& bluerov_camera) {
+  is_bluerov_camera_ = bluerov_camera;
+}
+
 }  // namespace spinnaker_camera_driver

@@ -181,7 +181,10 @@ class SpinnakerCamera {
 
   void setBlueROVCamera(const bool& bluerov_cam);
 
-  uint16_t checkPixelSize(const std::string& pixel_format);
+  uint16_t getbitsPerPixel(const std::string& image_format);
+  std::string getRosImageEncoding(const std::string& image_format);
+  Spinnaker::PixelFormatEnums getPixelFormatEnum(
+      const std::string& image_format);
 
  private:
   uint32_t serial_;  ///< A variable to hold the serial number of

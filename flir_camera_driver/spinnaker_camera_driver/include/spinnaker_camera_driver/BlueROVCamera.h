@@ -52,13 +52,13 @@ class BlueROVCamera : public Camera {
       const std::string& config_name,
       const spinnaker_camera_driver::SpinnakerConfig& new_config);
 
-
  private:
   SpinnakerConfig old_config_;
 
   const std::string binning_selector_ = "All";
   const std::string binning_mode_ = "Average";
-
+  const std::string blue = "Blue";
+  const std::string red = "Red";
 };
 
 }  // namespace spinnaker_camera_driver

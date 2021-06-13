@@ -384,7 +384,7 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
         case STOPPED:
           // Try disconnecting from the camera
           try {
-            NODELET_DEBUG("Disconnecting from camera.");
+            NODELET_DEBUG_STREAM_THROTTLE(60, "Disconnecting from camera.");
             spinnaker_.disconnect();
             NODELET_DEBUG("Disconnected from camera.");
 

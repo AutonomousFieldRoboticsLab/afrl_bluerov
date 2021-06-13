@@ -95,7 +95,7 @@ void Camera::setNewConfiguration(const SpinnakerConfig& config,
     setProperty(node_map_, "LineSource", config.line_source);
 
     // Set auto exposure
-    setProperty(node_map_, "ExposureMode", config.exposure_mode);
+    setProperty(node_map_, "ExposureMode", std::string("Timed"));
     setProperty(node_map_, "ExposureAuto", config.exposure_auto);
 
     // Set sharpness
@@ -105,9 +105,6 @@ void Camera::setNewConfiguration(const SpinnakerConfig& config,
         setProperty(node_map_, "SharpeningAuto", config.auto_sharpness);
         setProperty(
             node_map_, "Sharpening", static_cast<float>(config.sharpness));
-        setProperty(node_map_,
-                    "SharpeningThreshold",
-                    static_cast<float>(config.sharpening_threshold));
       }
     }
 
@@ -131,7 +128,7 @@ void Camera::setNewConfiguration(const SpinnakerConfig& config,
     }
 
     // Set gain
-    setProperty(node_map_, "GainSelector", config.gain_selector);
+    setProperty(node_map_, "GainSelector", std::string("All"));
     setProperty(node_map_, "GainAuto", config.auto_gain);
     if (config.auto_gain.compare(std::string("Off")) == 0) {
       setProperty(node_map_, "Gain", static_cast<float>(config.gain));

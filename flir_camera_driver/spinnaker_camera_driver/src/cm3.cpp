@@ -92,7 +92,7 @@ void Cm3::setNewConfiguration(const SpinnakerConfig& config,
     // available in CM3
 
     // Set auto exposure
-    setProperty(node_map_, "ExposureMode", config.exposure_mode);
+    setProperty(node_map_, "ExposureMode", std::string("Timed"));
     setProperty(node_map_, "ExposureAuto", config.exposure_auto);
 
     // Set sharpness
@@ -102,9 +102,6 @@ void Cm3::setNewConfiguration(const SpinnakerConfig& config,
         setProperty(node_map_, "SharpeningAuto", config.auto_sharpness);
         setProperty(
             node_map_, "Sharpening", static_cast<float>(config.sharpness));
-        setProperty(node_map_,
-                    "SharpeningThreshold",
-                    static_cast<float>(config.sharpening_threshold));
       }
     }
 

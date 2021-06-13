@@ -38,7 +38,7 @@ namespace spinnaker_camera_driver {
 BlueROVCamera::BlueROVCamera(Spinnaker::GenApi::INodeMap* node_map)
     : Camera(node_map) {
   init();
-  pixel_format_ = "Mono8";
+  pixel_format_ = "";
 }
 
 BlueROVCamera::~BlueROVCamera() {}
@@ -68,7 +68,7 @@ void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
     setProperty(node_map_, "LineSource", config.line_source);
 
     // Set auto exposure
-    setProperty(node_map_, "ExposureMode", config.exposure_mode);
+    setProperty(node_map_, "ExposureMode", std::string("Timed"));
     setProperty(node_map_, "ExposureAuto", config.exposure_auto);
 
     // Set sharpness
@@ -78,9 +78,6 @@ void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
         setProperty(node_map_, "SharpeningAuto", config.auto_sharpness);
         setProperty(
             node_map_, "Sharpening", static_cast<float>(config.sharpness));
-        setProperty(node_map_,
-                    "SharpeningThreshold",
-                    static_cast<float>(config.sharpening_threshold));
       }
     }
 
@@ -88,6 +85,12 @@ void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
     if (IsAvailable(node_map_->GetNode("SaturationEnable"))) {
       setProperty(node_map_, "SaturationEnable", config.saturation_enable);
       if (config.saturation_enable) {
+        double min_saturation = 0;
+        double max_saturation = 0;
+        getFloatValueMax(node_map_, "Saturation", max_saturation);
+        ROS_DEBUG_STREAM("Max Saturation: " << max_saturation);
+        getFloatValueMin(node_map_, "Saturation", min_saturation);
+        ROS_DEBUG_STREAM("Min Saturation: " << min_saturation);
         setProperty(
             node_map_, "Saturation", static_cast<float>(config.saturation));
       }
@@ -104,7 +107,7 @@ void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
     }
 
     // Set gain
-    setProperty(node_map_, "GainSelector", config.gain_selector);
+    setProperty(node_map_, "GainSelector", std::string("All"));
     setProperty(node_map_, "GainAuto", config.auto_gain);
     if (config.auto_gain.compare(std::string("Off")) == 0) {
       setProperty(node_map_, "Gain", static_cast<float>(config.gain));
@@ -114,6 +117,7 @@ void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
     setProperty(node_map_, "BlackLevel", static_cast<float>(config.brightness));
 
     // Set gamma
+
     if (config.gamma_enable) {
       setProperty(node_map_, "GammaEnable", config.gamma_enable);
       setProperty(node_map_, "Gamma", static_cast<float>(config.gamma));
@@ -123,11 +127,11 @@ void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
     if (IsAvailable(node_map_->GetNode("BalanceWhiteAuto"))) {
       setProperty(node_map_, "BalanceWhiteAuto", config.auto_white_balance);
       if (config.auto_white_balance.compare(std::string("Off")) == 0) {
-        setProperty(node_map_, "BalanceRatioSelector", "Blue");
+        setProperty(node_map_, "BalanceRatioSelector", std::string("Blue"));
         setProperty(node_map_,
                     "BalanceRatio",
                     static_cast<float>(config.white_balance_blue_ratio));
-        setProperty(node_map_, "BalanceRatioSelector", "Red");
+        setProperty(node_map_, "BalanceRatioSelector", std::string("Red"));
         setProperty(node_map_,
                     "BalanceRatio",
                     static_cast<float>(config.white_balance_red_ratio));
@@ -200,10 +204,24 @@ void BlueROVCamera::setImageControlFormats(
     setProperty(node_map_, "BinningVerticalMode", binning_mode_);
   }
 
-  if (isConfigChanged("ReverseX", config))
+  // Note: Bharat
+  // The availabilty of Bayer formats depend on X & Y direction.
+  // Hence, after reversing X & Y directions we will set the image formats once
+  // again.
+  if (isConfigChanged("ReverseX", config)) {
     setProperty(node_map_, "ReverseX", config.image_format_x_reverse);
-  if (isConfigChanged("ReverseY", config))
+    if (setProperty(
+            node_map_, "PixelFormat", config.image_format_color_coding)) {
+      pixel_format_ = config.image_format_color_coding;
+    }
+  }
+  if (isConfigChanged("ReverseY", config)) {
     setProperty(node_map_, "ReverseY", config.image_format_y_reverse);
+    if (setProperty(
+            node_map_, "PixelFormat", config.image_format_color_coding)) {
+      pixel_format_ = config.image_format_color_coding;
+    }
+  }
 
   // Grab the Max values after decimation
   Spinnaker::GenApi::CIntegerPtr height_max_ptr =
@@ -250,8 +268,12 @@ void BlueROVCamera::setImageControlFormats(
   //   setProperty(node_map_, "OffsetY", config.image_format_y_offset);
 
   // Set Pixel Format
-  if (isConfigChanged("PixelFormat", config))
-    setProperty(node_map_, "PixelFormat", config.image_format_color_coding);
+  if (isConfigChanged("PixelFormat", config)) {
+    if (setProperty(
+            node_map_, "PixelFormat", config.image_format_color_coding)) {
+      pixel_format_ = config.image_format_color_coding;
+    }
+  }
 }
 
 bool BlueROVCamera::isConfigChanged(

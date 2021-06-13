@@ -159,19 +159,20 @@ void Camera::setNewConfiguration(const SpinnakerConfig& config,
     }
 
     // Set Auto exposure/white balance parameters
-    if (IsAvailable(node_map_->GetNode("AutoAlgorithmSelector"))) {
-      setProperty(node_map_, "AutoAlgorithmSelector", std::string("Ae"));
-      setProperty(node_map_, "AasRoiEnable", true);
-      if (config.auto_exposure_roi_width != 0 &&
-          config.auto_exposure_roi_height != 0) {
-        setProperty(
-            node_map_, "AasRoiOffsetX", config.auto_exposure_roi_offset_x);
-        setProperty(
-            node_map_, "AasRoiOffsetY", config.auto_exposure_roi_offset_y);
-        setProperty(node_map_, "AasRoiWidth", config.auto_exposure_roi_width);
-        setProperty(node_map_, "AasRoiHeight", config.auto_exposure_roi_height);
-      }
-    }
+    // if (IsAvailable(node_map_->GetNode("AutoAlgorithmSelector"))) {
+    //   setProperty(node_map_, "AutoAlgorithmSelector", std::string("Ae"));
+    //   setProperty(node_map_, "AasRoiEnable", true);
+    //   if (config.auto_exposure_roi_width != 0 &&
+    //       config.auto_exposure_roi_height != 0) {
+    //     setProperty(
+    //         node_map_, "AasRoiOffsetX", config.auto_exposure_roi_offset_x);
+    //     setProperty(
+    //         node_map_, "AasRoiOffsetY", config.auto_exposure_roi_offset_y);
+    //     setProperty(node_map_, "AasRoiWidth",
+    //     config.auto_exposure_roi_width); setProperty(node_map_,
+    //     "AasRoiHeight", config.auto_exposure_roi_height);
+    //   }
+    // }
 
     // Set Auto exposure lighting mode
     if (IsAvailable(node_map_->GetNode("AutoExposureLightingMode"))) {

@@ -85,12 +85,6 @@ void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
     if (IsAvailable(node_map_->GetNode("SaturationEnable"))) {
       setProperty(node_map_, "SaturationEnable", config.saturation_enable);
       if (config.saturation_enable) {
-        double min_saturation = 0;
-        double max_saturation = 0;
-        getFloatValueMax(node_map_, "Saturation", max_saturation);
-        ROS_DEBUG_STREAM("Max Saturation: " << max_saturation);
-        getFloatValueMin(node_map_, "Saturation", min_saturation);
-        ROS_DEBUG_STREAM("Min Saturation: " << min_saturation);
         setProperty(
             node_map_, "Saturation", static_cast<float>(config.saturation));
       }
@@ -126,6 +120,9 @@ void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
     // Set white balance
     if (IsAvailable(node_map_->GetNode("BalanceWhiteAuto"))) {
       setProperty(node_map_, "BalanceWhiteAuto", config.auto_white_balance);
+      // Indoor allows for wider range during auto white balance mode.
+      // This could be helpful when we have color loss underwater
+      setProperty(node_map_, "BalanceWhiteAutoProfile", std::string("Indoor"));
       if (config.auto_white_balance.compare(std::string("Off")) == 0) {
         setProperty(node_map_, "BalanceRatioSelector", std::string("Blue"));
         setProperty(node_map_,
@@ -138,27 +135,27 @@ void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
       }
     }
 
-    // Set Auto exposure/white balance parameters
-    if (IsAvailable(node_map_->GetNode("AutoAlgorithmSelector"))) {
-      setProperty(node_map_, "AutoAlgorithmSelector", std::string("Ae"));
-      setProperty(node_map_, "AasRoiEnable", true);
-      if (config.auto_exposure_roi_width != 0 &&
-          config.auto_exposure_roi_height != 0) {
-        setProperty(
-            node_map_, "AasRoiOffsetX", config.auto_exposure_roi_offset_x);
-        setProperty(
-            node_map_, "AasRoiOffsetY", config.auto_exposure_roi_offset_y);
-        setProperty(node_map_, "AasRoiWidth", config.auto_exposure_roi_width);
-        setProperty(node_map_, "AasRoiHeight", config.auto_exposure_roi_height);
-      }
-    }
-
     // Set Auto exposure lighting mode
     if (IsAvailable(node_map_->GetNode("AutoExposureLightingMode"))) {
       setProperty(node_map_,
                   "AutoExposureLightingMode",
                   config.auto_exposure_lighting_mode);
     }
+
+    if (IsAvailable(node_map_->GetNode("AutoExposureTargetGreyValueAuto"))) {
+      setProperty(node_map_,
+                  "AutoExposureTargetGreyValueAuto",
+                  config.target_grey_auto);
+      setProperty(node_map_,
+                  "AutoExposureTargetGreyValue",
+                  static_cast<float>(config.target_grey_value));
+    }
+
+    if (IsAvailable(node_map_->GetNode("AutoExposureControlPriority"))) {
+      setProperty(
+          node_map_, "AutoExposureControlPriority", std::string("Gain"));
+    }
+
   } catch (const Spinnaker::Exception& e) {
     throw std::runtime_error(
         "[Camera::setNewConfiguration] Failed to set configuration: " +

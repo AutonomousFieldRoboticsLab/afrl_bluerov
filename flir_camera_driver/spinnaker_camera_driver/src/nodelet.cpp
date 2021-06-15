@@ -211,15 +211,6 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
 
     spinnaker_.setDesiredCamera((uint32_t)serial);
 
-    // Get GigE camera parameters:
-    pnh.param<int>("packet_size", packet_size_, 1400);
-    pnh.param<bool>("auto_packet_size", auto_packet_size_, true);
-    pnh.param<int>("packet_delay", packet_delay_, 4000);
-
-    // TODO(mhosmar):  Set GigE parameters:
-    // spinnaker_.setGigEParameters(auto_packet_size_, packet_size_,
-    // packet_delay_);
-
     // Get the location of our camera config yaml
     std::string camera_info_url;
     pnh.param<std::string>("camera_info_url", camera_info_url, "");
@@ -268,38 +259,6 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
 
     // Set up diagnostics
     updater_.setHardwareID("spinnaker_camera " + cinfo_name.str());
-
-    // Set up a diagnosed publisher
-    double desired_freq;
-    pnh.param<double>("desired_freq", desired_freq, 30.0);
-    pnh.param<double>("min_freq", min_freq_, desired_freq);
-    pnh.param<double>("max_freq", max_freq_, desired_freq);
-
-    // Tolerance before stating error on publish frequency,fractional percent of
-    // desired frequencies.
-    double freq_tolerance;
-    pnh.param<double>("freq_tolerance", freq_tolerance, 0.1);
-
-    int window_size;  // Number of samples to consider in frequency
-    pnh.param<int>("window_size", window_size, 100);
-    double min_acceptable;  // The minimum publishing delay (in seconds) before
-                            // warning.  Negative values mean future dated
-                            // messages.
-    pnh.param<double>("min_acceptable_delay", min_acceptable, 0.0);
-    double max_acceptable;  // The maximum publishing delay (in seconds) before
-                            // warning.
-    pnh.param<double>("max_acceptable_delay", max_acceptable, 0.2);
-    ros::SubscriberStatusCallback cb2 =
-        boost::bind(&SpinnakerCameraNodelet::connectCb, this);
-    pub_.reset(
-        new diagnostic_updater::DiagnosedPublisher<wfov_camera_msgs::WFOVImage>(
-            nh.advertise<wfov_camera_msgs::WFOVImage>(
-                "image", queue_size, cb2, cb2),
-            updater_,
-            diagnostic_updater::FrequencyStatusParam(
-                &min_freq_, &max_freq_, freq_tolerance, window_size),
-            diagnostic_updater::TimeStampStatusParam(min_acceptable,
-                                                     max_acceptable)));
 
     // Set up diagnostics aggregator publisher and diagnostics manager
     ros::SubscriberStatusCallback diag_cb =
@@ -465,31 +424,17 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
           break;
         case STARTED:
           try {
-            wfov_camera_msgs::WFOVImagePtr wfov_image(
-                new wfov_camera_msgs::WFOVImage);
+            sensor_msgs::ImagePtr image(new sensor_msgs::Image);
             // Get the image from the camera library
             NODELET_DEBUG_ONCE(
                 "Starting a new grab from camera with serial {%d}.",
                 spinnaker_.getSerial());
-            spinnaker_.grabImage(&wfov_image->image, frame_id_);
+            spinnaker_.grabImage(image.get(), frame_id_);
 
-            // Set other values
-            wfov_image->header.frame_id = frame_id_;
-
-            wfov_image->gain = gain_;
-            wfov_image->white_balance_blue = wb_blue_;
-            wfov_image->white_balance_red = wb_red_;
-
-            // wfov_image->temperature = spinnaker_.getCameraTemperature();
-
-            ros::Time time = ros::Time::now();
-            wfov_image->header.stamp = time;
-            wfov_image->image.header.stamp = time;
-
-            // Set the CameraInfo message
+            // // Set the CameraInfo message
             ci_.reset(new sensor_msgs::CameraInfo(cinfo_->getCameraInfo()));
-            ci_->header.stamp = wfov_image->image.header.stamp;
-            ci_->header.frame_id = wfov_image->header.frame_id;
+            ci_->header.stamp = image->header.stamp;
+            ci_->header.frame_id = image->header.frame_id;
             // The height, width, distortion model, and parameters are all
             // filled in by camera info manager.
             ci_->binning_x = binning_x_;
@@ -500,15 +445,8 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
             ci_->roi.width = roi_width_;
             ci_->roi.do_rectify = do_rectify_;
 
-            wfov_image->info = *ci_;
-
-            // Publish the full message
-            pub_->publish(wfov_image);
-
             // Publish the message using standard image transport
             if (it_pub_.getNumSubscribers() > 0) {
-              sensor_msgs::ImagePtr image(
-                  new sensor_msgs::Image(wfov_image->image));
               it_pub_.publish(image, ci_);
             }
           } catch (CameraTimeoutException& e) {
@@ -610,15 +548,6 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
   bool do_rectify_;  ///< Whether or not to rectify as if part of an image.  Set
                      ///< to false if whole image, and true if in
                      /// ROI mode.
-
-  // For GigE cameras:
-  /// If true, GigE packet size is automatically determined, otherwise
-  /// packet_size_ is used:
-  bool auto_packet_size_;
-  /// GigE packet size:
-  int packet_size_;
-  /// GigE packet delay:
-  int packet_delay_;
 
   /// Configuration:
   spinnaker_camera_driver::SpinnakerConfig config_;

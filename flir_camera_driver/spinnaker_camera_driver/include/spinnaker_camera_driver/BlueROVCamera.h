@@ -41,7 +41,7 @@ class BlueROVCamera : public Camera {
   ~BlueROVCamera();
 
   void setNewConfiguration(const SpinnakerConfig& config,
-                           const uint32_t& level);
+                           const uint32_t& level) override;
 
   void init() override;
 
@@ -59,6 +59,9 @@ class BlueROVCamera : public Camera {
   const std::string binning_mode_ = "Average";
   const std::string blue = "Blue";
   const std::string red = "Red";
+
+  bool static_configs_set_;
+  double frame_rate_;
 };
 
 }  // namespace spinnaker_camera_driver

@@ -39,6 +39,8 @@ BlueROVCamera::BlueROVCamera(Spinnaker::GenApi::INodeMap* node_map)
     : Camera(node_map) {
   init();
   pixel_format_ = "";
+  static_configs_set_ = false;
+  frame_rate_ = 0.0;
 }
 
 BlueROVCamera::~BlueROVCamera() {}
@@ -48,41 +50,54 @@ void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
   try {
     if (level >= LEVEL_RECONFIGURE_STOP) setImageControlFormats(config);
 
-    setFrameRate(static_cast<float>(config.acquisition_frame_rate));
     // Set enable after frame rate encase its false
-    setProperty(node_map_,
-                "AcquisitionFrameRateEnable",
-                config.acquisition_frame_rate_enable);
+
+    if (isConfigChanged("AcquisitionFrameRate", config) ||
+        isConfigChanged("AcquisitionFrameRateEnable", config)) {
+      setFrameRate(static_cast<float>(config.acquisition_frame_rate));
+      setProperty(node_map_,
+                  "AcquisitionFrameRateEnable",
+                  config.acquisition_frame_rate_enable);
+    }
 
     // Set Trigger and Strobe Settings
     // NOTE: The trigger must be disabled (i.e. TriggerMode = "Off") in order to
     // configure whether the source is software or hardware.
-    setProperty(node_map_, "TriggerMode", std::string("Off"));
-    setProperty(node_map_, "TriggerSource", config.trigger_source);
-    setProperty(node_map_, "TriggerSelector", config.trigger_selector);
-    setProperty(node_map_, "TriggerActivation", config.trigger_activation_mode);
-    setProperty(node_map_, "TriggerMode", config.enable_trigger);
+    // setProperty(node_map_, "TriggerMode", std::string("Off"));
+    // setProperty(node_map_, "TriggerSource", config.trigger_source);
+    // setProperty(node_map_, "TriggerSelector", config.trigger_selector);
+    // setProperty(node_map_, "TriggerActivation",
+    // config.trigger_activation_mode); setProperty(node_map_, "TriggerMode",
+    // config.enable_trigger);
 
-    setProperty(node_map_, "LineSelector", config.line_selector);
-    setProperty(node_map_, "LineMode", config.line_mode);
-    setProperty(node_map_, "LineSource", config.line_source);
+    // setProperty(node_map_, "TriggerSource", config.trigger_source);
+    // setProperty(node_map_, "TriggerSelector", config.trigger_selector);
+    // setProperty(node_map_, "TriggerActivation",
+    // config.trigger_activation_mode); setProperty(node_map_, "TriggerMode",
+    // config.enable_trigger);
 
-    // Set auto exposure
-    setProperty(node_map_, "ExposureMode", std::string("Timed"));
-    setProperty(node_map_, "ExposureAuto", config.exposure_auto);
+    // setProperty(node_map_, "LineSelector", config.line_selector);
+    // setProperty(node_map_, "LineMode", config.line_mode);
+    // setProperty(node_map_, "LineSource", config.line_source);
+
+    // // Set auto exposure
+    // setProperty(node_map_, "ExposureMode", std::string("Timed"));
+    // setProperty(node_map_, "ExposureAuto", config.exposure_auto);
 
     // Set sharpness
-    if (IsAvailable(node_map_->GetNode("SharpeningEnable"))) {
+    if (IsAvailable(node_map_->GetNode("SharpeningEnable")) &&
+        isConfigChanged("Sharpness", config)) {
       setProperty(node_map_, "SharpeningEnable", config.sharpening_enable);
       if (config.sharpening_enable) {
-        setProperty(node_map_, "SharpeningAuto", config.auto_sharpness);
+        setProperty(node_map_, "SharpeningAuto", true);
         setProperty(
             node_map_, "Sharpening", static_cast<float>(config.sharpness));
       }
     }
 
     // Set saturation
-    if (IsAvailable(node_map_->GetNode("SaturationEnable"))) {
+    if (IsAvailable(node_map_->GetNode("SaturationEnable")) &&
+        isConfigChanged("Saturation", config)) {
       setProperty(node_map_, "SaturationEnable", config.saturation_enable);
       if (config.saturation_enable) {
         setProperty(
@@ -90,72 +105,141 @@ void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
       }
     }
 
+    if (isConfigChanged("AutoExposure", config) &&
+        IsAvailable(node_map_->GetNode("ExposureAuto")))
+      setProperty(node_map_, "ExposureAuto", config.exposure_auto);
+
     // Set shutter time/speed
-    if (config.exposure_auto.compare(std::string("Off")) == 0) {
-      setProperty(
-          node_map_, "ExposureTime", static_cast<float>(config.exposure_time));
-    } else {
+    if (config.exposure_auto == "Off") {
+      if (config.exposure_time != old_config_.exposure_time ||
+          config.exposure_auto != old_config_.exposure_auto) {
+        setProperty(node_map_,
+                    "ExposureTime",
+                    static_cast<float>(config.exposure_time));
+        ROS_DEBUG_STREAM(
+            "Exposure time (in us) changed  to: " << config.exposure_time);
+      }
+    } else if (config.auto_exposure_time_upper_limit !=
+                   old_config_.auto_exposure_time_upper_limit ||
+               config.exposure_auto != old_config_.exposure_auto) {
+      ROS_DEBUG_STREAM("Automatic Exposure maximum limit (in us) changed to: "
+                       << config.auto_exposure_time_upper_limit);
       setProperty(node_map_,
                   "AutoExposureExposureTimeUpperLimit",
                   static_cast<float>(config.auto_exposure_time_upper_limit));
     }
 
     // Set gain
-    setProperty(node_map_, "GainSelector", std::string("All"));
-    setProperty(node_map_, "GainAuto", config.auto_gain);
-    if (config.auto_gain.compare(std::string("Off")) == 0) {
+    if (isConfigChanged("AutoGain", config)) {
+      setProperty(node_map_, "GainAuto", config.auto_gain);
+      ROS_DEBUG_STREAM("Auto Gain changed from: "
+                       << old_config_.auto_gain << " to: " << config.auto_gain);
+    }
+    if (config.auto_gain == "Off" &&
+        (config.gain != old_config_.gain ||
+         config.auto_gain != old_config_.auto_gain)) {
+      ROS_DEBUG_STREAM("Gain is set to: " << config.gain);
       setProperty(node_map_, "Gain", static_cast<float>(config.gain));
     }
 
     // Set brightness
-    setProperty(node_map_, "BlackLevel", static_cast<float>(config.brightness));
-
+    if (config.brightness != old_config_.brightness) {
+      setProperty(
+          node_map_, "BlackLevel", static_cast<float>(config.brightness));
+      ROS_DEBUG_STREAM("Black Level is changed from: " << old_config_.brightness
+                                                       << "to: "
+                                                       << config.brightness);
+    }
     // Set gamma
-
-    if (config.gamma_enable) {
+    if (config.gamma_enable != old_config_.gamma_enable) {
       setProperty(node_map_, "GammaEnable", config.gamma_enable);
+      if (config.gamma_enable)
+        ROS_DEBUG_STREAM("Gamma Correction Enabled.");
+      else
+        ROS_DEBUG_STREAM("Gamma Correction Disabled.");
+    }
+    if (config.gamma_enable && config.gamma != old_config_.gamma) {
       setProperty(node_map_, "Gamma", static_cast<float>(config.gamma));
+      ROS_DEBUG_STREAM("Gamma Correction value is set to: " << config.gamma);
     }
 
     // Set white balance
     if (IsAvailable(node_map_->GetNode("BalanceWhiteAuto"))) {
-      setProperty(node_map_, "BalanceWhiteAuto", config.auto_white_balance);
+      if (old_config_.auto_white_balance != config.auto_white_balance) {
+        setProperty(node_map_, "BalanceWhiteAuto", config.auto_white_balance);
+        ROS_DEBUG_STREAM("White Balance changed from: "
+                         << old_config_.auto_white_balance
+                         << " to: " << config.auto_white_balance);
+      }
       // Indoor allows for wider range during auto white balance mode.
       // This could be helpful when we have color loss underwater
-      setProperty(node_map_, "BalanceWhiteAutoProfile", std::string("Indoor"));
-      if (config.auto_white_balance.compare(std::string("Off")) == 0) {
-        setProperty(node_map_, "BalanceRatioSelector", std::string("Blue"));
-        setProperty(node_map_,
-                    "BalanceRatio",
-                    static_cast<float>(config.white_balance_blue_ratio));
-        setProperty(node_map_, "BalanceRatioSelector", std::string("Red"));
-        setProperty(node_map_,
-                    "BalanceRatio",
-                    static_cast<float>(config.white_balance_red_ratio));
+      static bool white_balance_auto_profile = false;
+      if (!white_balance_auto_profile) {
+        if (setProperty(
+                node_map_, "BalanceWhiteAutoProfile", std::string("Indoor")))
+          white_balance_auto_profile = true;
+      }
+
+      if (config.auto_white_balance == "Off") {
+        if (config.white_balance_blue_ratio !=
+            old_config_.white_balance_blue_ratio) {
+          setProperty(node_map_, "BalanceRatioSelector", std::string("Blue"));
+          setProperty(node_map_,
+                      "BalanceRatio",
+                      static_cast<float>(config.white_balance_blue_ratio));
+          ROS_DEBUG_STREAM("WB Blue Ratio (B/G) updated to: "
+                           << config.white_balance_blue_ratio);
+        }
+        if (config.white_balance_red_ratio !=
+            old_config_.white_balance_red_ratio) {
+          setProperty(node_map_, "BalanceRatioSelector", std::string("Red"));
+
+          setProperty(node_map_,
+                      "BalanceRatio",
+                      static_cast<float>(config.white_balance_red_ratio));
+          ROS_DEBUG_STREAM("WB Red Ratio (R/G) updated to: "
+                           << config.white_balance_red_ratio);
+        }
       }
     }
 
     // Set Auto exposure lighting mode
-    if (IsAvailable(node_map_->GetNode("AutoExposureLightingMode"))) {
+    if (IsAvailable(node_map_->GetNode("AutoExposureLightingMode")) &&
+        old_config_.auto_exposure_lighting_mode !=
+            config.auto_exposure_lighting_mode) {
       setProperty(node_map_,
                   "AutoExposureLightingMode",
                   config.auto_exposure_lighting_mode);
+      ROS_DEBUG_STREAM("Auto exposure lighting mode updated from: "
+                       << old_config_.auto_exposure_lighting_mode
+                       << " to: " << config.auto_exposure_lighting_mode);
     }
 
     if (IsAvailable(node_map_->GetNode("AutoExposureTargetGreyValueAuto"))) {
-      setProperty(node_map_,
-                  "AutoExposureTargetGreyValueAuto",
-                  config.target_grey_auto);
-      setProperty(node_map_,
-                  "AutoExposureTargetGreyValue",
-                  static_cast<float>(config.target_grey_value));
+      if (old_config_.target_grey_auto != config.target_grey_auto)
+        setProperty(node_map_,
+                    "AutoExposureTargetGreyValueAuto",
+                    config.target_grey_auto);
+      if (config.target_grey_auto == "Off")
+        setProperty(node_map_,
+                    "AutoExposureTargetGreyValue",
+                    static_cast<float>(config.target_grey_value));
     }
 
-    if (IsAvailable(node_map_->GetNode("AutoExposureControlPriority"))) {
-      setProperty(
-          node_map_, "AutoExposureControlPriority", std::string("Gain"));
+    // NOTE: Trigger is disabled and not used in our case
+    if (!static_configs_set_) {
+      bool success = true;
+      if (!setProperty(node_map_, "TriggerMode", std::string("Off")))
+        success = false;
+      if (IsAvailable(node_map_->GetNode("AutoExposureControlPriority"))) {
+        if (!setProperty(
+                node_map_, "AutoExposureControlPriority", std::string("Gain")))
+          success = false;
+      }
+      if (!setProperty(node_map_, "GainSelector", std::string("All")))
+        success = false;
+      static_configs_set_ = success;
     }
-
   } catch (const Spinnaker::Exception& e) {
     throw std::runtime_error(
         "[Camera::setNewConfiguration] Failed to set configuration: " +
@@ -203,8 +287,8 @@ void BlueROVCamera::setImageControlFormats(
 
   // Note: Bharat
   // The availabilty of Bayer formats depend on X & Y direction.
-  // Hence, after reversing X & Y directions we will set the image formats once
-  // again.
+  // Hence, after reversing X & Y directions we will set the image formats
+  // once again.
   if (isConfigChanged("ReverseX", config)) {
     setProperty(node_map_, "ReverseX", config.image_format_x_reverse);
     if (setProperty(
@@ -279,8 +363,8 @@ bool BlueROVCamera::isConfigChanged(
   if (config_name == "Binning" &&
       old_config_.image_format_binning != new_config.image_format_binning) {
     ROS_DEBUG_STREAM("Binning changed from: "
-                     << old_config_.image_format_binning << " to: "
-                     << new_config.image_format_binning << std::endl);
+                     << old_config_.image_format_binning
+                     << " to: " << new_config.image_format_binning);
 
     return true;
   } else if (config_name == "ReverseX" &&
@@ -304,6 +388,41 @@ bool BlueROVCamera::isConfigChanged(
     ROS_DEBUG_STREAM("Image color encoding changed from: "
                      << pixel_format_
                      << " to: " << new_config.image_format_color_coding);
+    return true;
+  } else if (config_name == "AcquisitionFrameRateEnable" &&
+             new_config.acquisition_frame_rate_enable !=
+                 old_config_.acquisition_frame_rate_enable) {
+    if (new_config.acquisition_frame_rate_enable)
+      ROS_DEBUG_STREAM("Acquisition Frame Rate Control Enabled.");
+    else
+      ROS_DEBUG_STREAM("Acquisition Frame Rate Control Disabled.");
+    return true;
+  } else if (config_name == "AcquisitionFrameRate" &&
+             new_config.acquisition_frame_rate != frame_rate_) {
+    ROS_DEBUG_STREAM("Frame Rate changed from: "
+                     << frame_rate_
+                     << " to: " << new_config.acquisition_frame_rate);
+    frame_rate_ = new_config.acquisition_frame_rate;
+    return true;
+    // clang-format off
+  } else if (config_name == "Sharpness" && 
+              (new_config.sharpening_enable != old_config_.sharpening_enable ||
+              new_config.sharpness != old_config_.sharpness)) {
+    ROS_DEBUG_STREAM("Sharpeness Settings Changed");
+    return true;
+  }else if (config_name == "Saturation" && 
+              (new_config.saturation_enable != old_config_.saturation_enable ||
+              new_config.saturation != old_config_.saturation )) {
+    ROS_DEBUG_STREAM("Saturation Settings Changed");
+    return true;
+  }  // clang-format on
+  else if (config_name == "AutoExposure" &&
+           new_config.exposure_auto != old_config_.exposure_auto) {
+    ROS_DEBUG_STREAM("Auto Exposure settings changed.");
+    return true;
+  } else if (config_name == "AutoGain" &&
+             new_config.auto_gain != old_config_.auto_gain) {
+    ROS_DEBUG_STREAM("Auto Gain settings changed.");
     return true;
   }
   return false;

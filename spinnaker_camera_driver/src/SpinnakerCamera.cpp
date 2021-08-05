@@ -48,9 +48,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <ros/ros.h>
 
-#include <cv.hpp>
 #include <fstream>
 #include <iostream>
+#include <opencv2/core/core.hpp>
 #include <sstream>
 #include <string>
 #include <typeinfo>

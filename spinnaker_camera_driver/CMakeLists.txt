@@ -19,7 +19,7 @@ catkin_package(CATKIN_DEPENDS
   image_exposure_msgs nodelet roscpp sensor_msgs wfov_camera_msgs
 )
 
-find_package(OpenCV 3 REQUIRED)
+find_package(OpenCV REQUIRED)
 
 # If Spinnacker is already present, use the found version. If not, download it.
 # We can't resolve this dependency using the usual rosdep means because

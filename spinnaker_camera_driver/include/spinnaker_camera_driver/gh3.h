@@ -37,11 +37,9 @@ class Gh3 : public Camera {
   explicit Gh3(Spinnaker::GenApi::INodeMap* node_map);
   ~Gh3();
   void setFrameRate(const float frame_rate);
-  void setNewConfiguration(const SpinnakerConfig& config,
-                           const uint32_t& level);
+  void setNewConfiguration(const SpinnakerConfig& config, const uint32_t& level);
 
  private:
-  void setImageControlFormats(
-      const spinnaker_camera_driver::SpinnakerConfig& config);
+  void setImageControlFormats(const spinnaker_camera_driver::SpinnakerConfig& config);
 };
 }  // namespace spinnaker_camera_driver

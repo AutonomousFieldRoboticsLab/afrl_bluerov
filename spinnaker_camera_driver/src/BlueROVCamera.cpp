@@ -35,8 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace spinnaker_camera_driver {
 
-BlueROVCamera::BlueROVCamera(Spinnaker::GenApi::INodeMap* node_map)
-    : Camera(node_map) {
+BlueROVCamera::BlueROVCamera(Spinnaker::GenApi::INodeMap* node_map) : Camera(node_map) {
   init();
   pixel_format_ = "";
   static_configs_set_ = false;
@@ -45,8 +44,7 @@ BlueROVCamera::BlueROVCamera(Spinnaker::GenApi::INodeMap* node_map)
 
 BlueROVCamera::~BlueROVCamera() {}
 
-void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
-                                        const uint32_t& level) {
+void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config, const uint32_t& level) {
   try {
     if (level >= LEVEL_RECONFIGURE_STOP) setImageControlFormats(config);
 
@@ -55,9 +53,7 @@ void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
     if (isConfigChanged("AcquisitionFrameRate", config) ||
         isConfigChanged("AcquisitionFrameRateEnable", config)) {
       setFrameRate(static_cast<float>(config.acquisition_frame_rate));
-      setProperty(node_map_,
-                  "AcquisitionFrameRateEnable",
-                  config.acquisition_frame_rate_enable);
+      setProperty(node_map_, "AcquisitionFrameRateEnable", config.acquisition_frame_rate_enable);
     }
 
     // Set Trigger and Strobe Settings
@@ -90,8 +86,7 @@ void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
       setProperty(node_map_, "SharpeningEnable", config.sharpening_enable);
       if (config.sharpening_enable) {
         setProperty(node_map_, "SharpeningAuto", true);
-        setProperty(
-            node_map_, "Sharpening", static_cast<float>(config.sharpness));
+        setProperty(node_map_, "Sharpening", static_cast<float>(config.sharpness));
       }
     }
 
@@ -100,24 +95,19 @@ void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
         isConfigChanged("Saturation", config)) {
       setProperty(node_map_, "SaturationEnable", config.saturation_enable);
       if (config.saturation_enable) {
-        setProperty(
-            node_map_, "Saturation", static_cast<float>(config.saturation));
+        setProperty(node_map_, "Saturation", static_cast<float>(config.saturation));
       }
     }
 
-    if (isConfigChanged("AutoExposure", config) &&
-        IsAvailable(node_map_->GetNode("ExposureAuto")))
+    if (isConfigChanged("AutoExposure", config) && IsAvailable(node_map_->GetNode("ExposureAuto")))
       setProperty(node_map_, "ExposureAuto", config.exposure_auto);
 
     // Set shutter time/speed
     if (config.exposure_auto == "Off") {
       if (config.exposure_time != old_config_.exposure_time ||
           config.exposure_auto != old_config_.exposure_auto) {
-        setProperty(node_map_,
-                    "ExposureTime",
-                    static_cast<float>(config.exposure_time));
-        ROS_DEBUG_STREAM(
-            "Exposure time (in us) changed  to: " << config.exposure_time);
+        setProperty(node_map_, "ExposureTime", static_cast<float>(config.exposure_time));
+        ROS_DEBUG_STREAM("Exposure time (in us) changed  to: " << config.exposure_time);
       }
     } else if (config.auto_exposure_time_upper_limit !=
                    old_config_.auto_exposure_time_upper_limit ||
@@ -132,23 +122,20 @@ void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
     // Set gain
     if (isConfigChanged("AutoGain", config)) {
       setProperty(node_map_, "GainAuto", config.auto_gain);
-      ROS_DEBUG_STREAM("Auto Gain changed from: "
-                       << old_config_.auto_gain << " to: " << config.auto_gain);
+      ROS_DEBUG_STREAM("Auto Gain changed from: " << old_config_.auto_gain
+                                                  << " to: " << config.auto_gain);
     }
     if (config.auto_gain == "Off" &&
-        (config.gain != old_config_.gain ||
-         config.auto_gain != old_config_.auto_gain)) {
+        (config.gain != old_config_.gain || config.auto_gain != old_config_.auto_gain)) {
       ROS_DEBUG_STREAM("Gain is set to: " << config.gain);
       setProperty(node_map_, "Gain", static_cast<float>(config.gain));
     }
 
     // Set brightness
     if (config.brightness != old_config_.brightness) {
-      setProperty(
-          node_map_, "BlackLevel", static_cast<float>(config.brightness));
+      setProperty(node_map_, "BlackLevel", static_cast<float>(config.brightness));
       ROS_DEBUG_STREAM("Black Level is changed from: " << old_config_.brightness
-                                                       << "to: "
-                                                       << config.brightness);
+                                                       << "to: " << config.brightness);
     }
     // Set gamma
     if (config.gamma_enable != old_config_.gamma_enable) {
@@ -167,49 +154,38 @@ void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
     if (IsAvailable(node_map_->GetNode("BalanceWhiteAuto"))) {
       if (old_config_.auto_white_balance != config.auto_white_balance) {
         setProperty(node_map_, "BalanceWhiteAuto", config.auto_white_balance);
-        ROS_DEBUG_STREAM("White Balance changed from: "
-                         << old_config_.auto_white_balance
-                         << " to: " << config.auto_white_balance);
+        ROS_DEBUG_STREAM("White Balance changed from: " << old_config_.auto_white_balance
+                                                        << " to: " << config.auto_white_balance);
       }
       // Indoor allows for wider range during auto white balance mode.
       // This could be helpful when we have color loss underwater
       static bool white_balance_auto_profile = false;
       if (!white_balance_auto_profile) {
-        if (setProperty(
-                node_map_, "BalanceWhiteAutoProfile", std::string("Indoor")))
+        if (setProperty(node_map_, "BalanceWhiteAutoProfile", std::string("Indoor")))
           white_balance_auto_profile = true;
       }
 
       if (config.auto_white_balance == "Off") {
-        if (config.white_balance_blue_ratio !=
-            old_config_.white_balance_blue_ratio) {
+        if (config.white_balance_blue_ratio != old_config_.white_balance_blue_ratio) {
           setProperty(node_map_, "BalanceRatioSelector", std::string("Blue"));
-          setProperty(node_map_,
-                      "BalanceRatio",
-                      static_cast<float>(config.white_balance_blue_ratio));
-          ROS_DEBUG_STREAM("WB Blue Ratio (B/G) updated to: "
-                           << config.white_balance_blue_ratio);
+          setProperty(
+              node_map_, "BalanceRatio", static_cast<float>(config.white_balance_blue_ratio));
+          ROS_DEBUG_STREAM("WB Blue Ratio (B/G) updated to: " << config.white_balance_blue_ratio);
         }
-        if (config.white_balance_red_ratio !=
-            old_config_.white_balance_red_ratio) {
+        if (config.white_balance_red_ratio != old_config_.white_balance_red_ratio) {
           setProperty(node_map_, "BalanceRatioSelector", std::string("Red"));
 
-          setProperty(node_map_,
-                      "BalanceRatio",
-                      static_cast<float>(config.white_balance_red_ratio));
-          ROS_DEBUG_STREAM("WB Red Ratio (R/G) updated to: "
-                           << config.white_balance_red_ratio);
+          setProperty(
+              node_map_, "BalanceRatio", static_cast<float>(config.white_balance_red_ratio));
+          ROS_DEBUG_STREAM("WB Red Ratio (R/G) updated to: " << config.white_balance_red_ratio);
         }
       }
     }
 
     // Set Auto exposure lighting mode
     if (IsAvailable(node_map_->GetNode("AutoExposureLightingMode")) &&
-        old_config_.auto_exposure_lighting_mode !=
-            config.auto_exposure_lighting_mode) {
-      setProperty(node_map_,
-                  "AutoExposureLightingMode",
-                  config.auto_exposure_lighting_mode);
+        old_config_.auto_exposure_lighting_mode != config.auto_exposure_lighting_mode) {
+      setProperty(node_map_, "AutoExposureLightingMode", config.auto_exposure_lighting_mode);
       ROS_DEBUG_STREAM("Auto exposure lighting mode updated from: "
                        << old_config_.auto_exposure_lighting_mode
                        << " to: " << config.auto_exposure_lighting_mode);
@@ -217,33 +193,26 @@ void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
 
     if (IsAvailable(node_map_->GetNode("AutoExposureTargetGreyValueAuto"))) {
       if (old_config_.target_grey_auto != config.target_grey_auto)
-        setProperty(node_map_,
-                    "AutoExposureTargetGreyValueAuto",
-                    config.target_grey_auto);
+        setProperty(node_map_, "AutoExposureTargetGreyValueAuto", config.target_grey_auto);
       if (config.target_grey_auto == "Off")
-        setProperty(node_map_,
-                    "AutoExposureTargetGreyValue",
-                    static_cast<float>(config.target_grey_value));
+        setProperty(
+            node_map_, "AutoExposureTargetGreyValue", static_cast<float>(config.target_grey_value));
     }
 
     // NOTE: Trigger is disabled and not used in our case
     if (!static_configs_set_) {
       bool success = true;
-      if (!setProperty(node_map_, "TriggerMode", std::string("Off")))
-        success = false;
+      if (!setProperty(node_map_, "TriggerMode", std::string("Off"))) success = false;
       if (IsAvailable(node_map_->GetNode("AutoExposureControlPriority"))) {
-        if (!setProperty(
-                node_map_, "AutoExposureControlPriority", std::string("Gain")))
+        if (!setProperty(node_map_, "AutoExposureControlPriority", std::string("Gain")))
           success = false;
       }
-      if (!setProperty(node_map_, "GainSelector", std::string("All")))
-        success = false;
+      if (!setProperty(node_map_, "GainSelector", std::string("All"))) success = false;
       static_configs_set_ = success;
     }
   } catch (const Spinnaker::Exception& e) {
-    throw std::runtime_error(
-        "[Camera::setNewConfiguration] Failed to set configuration: " +
-        std::string(e.what()));
+    throw std::runtime_error("[Camera::setNewConfiguration] Failed to set configuration: " +
+                             std::string(e.what()));
   }
 
   old_config_ = config;
@@ -259,14 +228,12 @@ void BlueROVCamera::setNewConfiguration(const SpinnakerConfig& config,
 void BlueROVCamera::init() {
   // Modified by Bharat
 
-  Spinnaker::GenApi::CIntegerPtr sensor_height_ptr =
-      node_map_->GetNode("SensorHeight");
+  Spinnaker::GenApi::CIntegerPtr sensor_height_ptr = node_map_->GetNode("SensorHeight");
   if (!IsAvailable(sensor_height_ptr) || !IsReadable(sensor_height_ptr)) {
     throw std::runtime_error("[Camera::init] Unable to read SensorHeight");
   }
   height_max_ = sensor_height_ptr->GetValue();
-  Spinnaker::GenApi::CIntegerPtr sensor_width_ptr =
-      node_map_->GetNode("SensorWidth");
+  Spinnaker::GenApi::CIntegerPtr sensor_width_ptr = node_map_->GetNode("SensorWidth");
   if (!IsAvailable(sensor_width_ptr) || !IsReadable(sensor_width_ptr)) {
     throw std::runtime_error("[Camera::init] Unable to read SensorWidth");
   }
@@ -274,8 +241,7 @@ void BlueROVCamera::init() {
 }
 
 // Image Size and Pixel Format
-void BlueROVCamera::setImageControlFormats(
-    const spinnaker_camera_driver::SpinnakerConfig& config) {
+void BlueROVCamera::setImageControlFormats(const spinnaker_camera_driver::SpinnakerConfig& config) {
   // Set Binning, and Reverse
   if (isConfigChanged("Binning", config)) {
     setProperty(node_map_, "BinningHorizontal", config.image_format_binning);
@@ -291,31 +257,26 @@ void BlueROVCamera::setImageControlFormats(
   // once again.
   if (isConfigChanged("ReverseX", config)) {
     setProperty(node_map_, "ReverseX", config.image_format_x_reverse);
-    if (setProperty(
-            node_map_, "PixelFormat", config.image_format_color_coding)) {
+    if (setProperty(node_map_, "PixelFormat", config.image_format_color_coding)) {
       pixel_format_ = config.image_format_color_coding;
     }
   }
   if (isConfigChanged("ReverseY", config)) {
     setProperty(node_map_, "ReverseY", config.image_format_y_reverse);
-    if (setProperty(
-            node_map_, "PixelFormat", config.image_format_color_coding)) {
+    if (setProperty(node_map_, "PixelFormat", config.image_format_color_coding)) {
       pixel_format_ = config.image_format_color_coding;
     }
   }
 
   // Grab the Max values after decimation
-  Spinnaker::GenApi::CIntegerPtr height_max_ptr =
-      node_map_->GetNode("HeightMax");
+  Spinnaker::GenApi::CIntegerPtr height_max_ptr = node_map_->GetNode("HeightMax");
   if (!IsAvailable(height_max_ptr) || !IsReadable(height_max_ptr)) {
-    throw std::runtime_error(
-        "[Camera::setImageControlFormats] Unable to read HeightMax");
+    throw std::runtime_error("[Camera::setImageControlFormats] Unable to read HeightMax");
   }
   int height_max = height_max_ptr->GetValue();
   Spinnaker::GenApi::CIntegerPtr width_max_ptr = node_map_->GetNode("WidthMax");
   if (!IsAvailable(width_max_ptr) || !IsReadable(width_max_ptr)) {
-    throw std::runtime_error(
-        "[Camera::setImageControlFormats] Unable to read WidthMax");
+    throw std::runtime_error("[Camera::setImageControlFormats] Unable to read WidthMax");
   }
   int width_max = width_max_ptr->GetValue();
 
@@ -350,34 +311,29 @@ void BlueROVCamera::setImageControlFormats(
 
   // Set Pixel Format
   if (isConfigChanged("PixelFormat", config)) {
-    if (setProperty(
-            node_map_, "PixelFormat", config.image_format_color_coding)) {
+    if (setProperty(node_map_, "PixelFormat", config.image_format_color_coding)) {
       pixel_format_ = config.image_format_color_coding;
     }
   }
 }
 
-bool BlueROVCamera::isConfigChanged(
-    const std::string& config_name,
-    const spinnaker_camera_driver::SpinnakerConfig& new_config) {
+bool BlueROVCamera::isConfigChanged(const std::string& config_name,
+                                    const spinnaker_camera_driver::SpinnakerConfig& new_config) {
   if (config_name == "Binning" &&
       old_config_.image_format_binning != new_config.image_format_binning) {
-    ROS_DEBUG_STREAM("Binning changed from: "
-                     << old_config_.image_format_binning
-                     << " to: " << new_config.image_format_binning);
+    ROS_DEBUG_STREAM("Binning changed from: " << old_config_.image_format_binning
+                                              << " to: " << new_config.image_format_binning);
 
     return true;
   } else if (config_name == "ReverseX" &&
-             old_config_.image_format_x_reverse !=
-                 new_config.image_format_x_reverse) {
+             old_config_.image_format_x_reverse != new_config.image_format_x_reverse) {
     if (new_config.image_format_x_reverse)
       ROS_DEBUG_STREAM("Image is reversed in X direction\n");
     else
       ROS_DEBUG_STREAM("Image reverse corrected in X direction\n");
     return true;
   } else if (config_name == "ReverseY" &&
-             old_config_.image_format_y_reverse !=
-                 new_config.image_format_y_reverse) {
+             old_config_.image_format_y_reverse != new_config.image_format_y_reverse) {
     if (new_config.image_format_y_reverse)
       ROS_DEBUG_STREAM("Image is reversed in Y direction\n");
     else
@@ -385,9 +341,8 @@ bool BlueROVCamera::isConfigChanged(
     return true;
   } else if (config_name == "PixelFormat" &&
              pixel_format_ != new_config.image_format_color_coding) {
-    ROS_DEBUG_STREAM("Image color encoding changed from: "
-                     << pixel_format_
-                     << " to: " << new_config.image_format_color_coding);
+    ROS_DEBUG_STREAM("Image color encoding changed from: " << pixel_format_ << " to: "
+                                                           << new_config.image_format_color_coding);
     return true;
   } else if (config_name == "AcquisitionFrameRateEnable" &&
              new_config.acquisition_frame_rate_enable !=
@@ -399,9 +354,8 @@ bool BlueROVCamera::isConfigChanged(
     return true;
   } else if (config_name == "AcquisitionFrameRate" &&
              new_config.acquisition_frame_rate != frame_rate_) {
-    ROS_DEBUG_STREAM("Frame Rate changed from: "
-                     << frame_rate_
-                     << " to: " << new_config.acquisition_frame_rate);
+    ROS_DEBUG_STREAM("Frame Rate changed from: " << frame_rate_
+                                                 << " to: " << new_config.acquisition_frame_rate);
     frame_rate_ = new_config.acquisition_frame_rate;
     return true;
     // clang-format off
@@ -416,12 +370,10 @@ bool BlueROVCamera::isConfigChanged(
     ROS_DEBUG_STREAM("Saturation Settings Changed");
     return true;
   }  // clang-format on
-  else if (config_name == "AutoExposure" &&
-           new_config.exposure_auto != old_config_.exposure_auto) {
+  else if (config_name == "AutoExposure" && new_config.exposure_auto != old_config_.exposure_auto) {
     ROS_DEBUG_STREAM("Auto Exposure settings changed.");
     return true;
-  } else if (config_name == "AutoGain" &&
-             new_config.auto_gain != old_config_.auto_gain) {
+  } else if (config_name == "AutoGain" && new_config.auto_gain != old_config_.auto_gain) {
     ROS_DEBUG_STREAM("Auto Gain settings changed.");
     return true;
   }

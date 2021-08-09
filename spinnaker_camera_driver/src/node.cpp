@@ -58,10 +58,7 @@ int main(int argc, char** argv) {
   nodelet::M_string remap(ros::names::getRemappings());
   nodelet::V_string nargv;
   std::string nodelet_name = ros::this_node::getName();
-  nodelet.load(nodelet_name,
-               "spinnaker_camera_driver/SpinnakerCameraNodelet",
-               remap,
-               nargv);
+  nodelet.load(nodelet_name, "spinnaker_camera_driver/SpinnakerCameraNodelet", remap, nargv);
 
   ros::spin();
 

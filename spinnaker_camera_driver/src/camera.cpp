@@ -33,8 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace spinnaker_camera_driver {
 void Camera::init() {
-  Spinnaker::GenApi::CIntegerPtr height_max_ptr =
-      node_map_->GetNode("HeightMax");
+  Spinnaker::GenApi::CIntegerPtr height_max_ptr = node_map_->GetNode("HeightMax");
   if (!IsAvailable(height_max_ptr) || !IsReadable(height_max_ptr)) {
     throw std::runtime_error("[Camera::init] Unable to read HeightMax");
   }
@@ -56,30 +55,23 @@ void Camera::setFrameRate(const float frame_rate) {
   // This sets the "AcquisitionFrameRate" to X FPS
   // ========================================
 
-  Spinnaker::GenApi::CFloatPtr ptrAcquisitionFrameRate =
-      node_map_->GetNode("AcquisitionFrameRate");
-  ROS_DEBUG_STREAM("Minimum Frame Rate: \t "
-                   << ptrAcquisitionFrameRate->GetMin());
-  ROS_DEBUG_STREAM("Maximum Frame rate: \t "
-                   << ptrAcquisitionFrameRate->GetMax());
+  Spinnaker::GenApi::CFloatPtr ptrAcquisitionFrameRate = node_map_->GetNode("AcquisitionFrameRate");
+  ROS_DEBUG_STREAM("Minimum Frame Rate: \t " << ptrAcquisitionFrameRate->GetMin());
+  ROS_DEBUG_STREAM("Maximum Frame rate: \t " << ptrAcquisitionFrameRate->GetMax());
 
   // Finally Set the Frame Rate
   setProperty(node_map_, "AcquisitionFrameRate", frame_rate);
 
-  ROS_DEBUG_STREAM("Current Frame rate: \t "
-                   << ptrAcquisitionFrameRate->GetValue());
+  ROS_DEBUG_STREAM("Current Frame rate: \t " << ptrAcquisitionFrameRate->GetValue());
 }
 
-void Camera::setNewConfiguration(const SpinnakerConfig& config,
-                                 const uint32_t& level) {
+void Camera::setNewConfiguration(const SpinnakerConfig& config, const uint32_t& level) {
   try {
     if (level >= LEVEL_RECONFIGURE_STOP) setImageControlFormats(config);
 
     setFrameRate(static_cast<float>(config.acquisition_frame_rate));
     // Set enable after frame rate encase its false
-    setProperty(node_map_,
-                "AcquisitionFrameRateEnable",
-                config.acquisition_frame_rate_enable);
+    setProperty(node_map_, "AcquisitionFrameRateEnable", config.acquisition_frame_rate_enable);
 
     // Set Trigger and Strobe Settings
     // NOTE: The trigger must be disabled (i.e. TriggerMode = "Off") in order to
@@ -104,8 +96,7 @@ void Camera::setNewConfiguration(const SpinnakerConfig& config,
       setProperty(node_map_, "SharpeningEnable", config.sharpening_enable);
       if (config.sharpening_enable) {
         // setProperty(node_map_, "SharpeningAuto", config.auto_sharpness);
-        setProperty(
-            node_map_, "Sharpening", static_cast<float>(config.sharpness));
+        setProperty(node_map_, "Sharpening", static_cast<float>(config.sharpness));
       }
     }
 
@@ -113,15 +104,13 @@ void Camera::setNewConfiguration(const SpinnakerConfig& config,
     if (IsAvailable(node_map_->GetNode("SaturationEnable"))) {
       setProperty(node_map_, "SaturationEnable", config.saturation_enable);
       if (config.saturation_enable) {
-        setProperty(
-            node_map_, "Saturation", static_cast<float>(config.saturation));
+        setProperty(node_map_, "Saturation", static_cast<float>(config.saturation));
       }
     }
 
     // Set shutter time/speed
     if (config.exposure_auto.compare(std::string("Off")) == 0) {
-      setProperty(
-          node_map_, "ExposureTime", static_cast<float>(config.exposure_time));
+      setProperty(node_map_, "ExposureTime", static_cast<float>(config.exposure_time));
     } else {
       setProperty(node_map_,
                   "AutoExposureExposureTimeUpperLimit",
@@ -149,13 +138,9 @@ void Camera::setNewConfiguration(const SpinnakerConfig& config,
       setProperty(node_map_, "BalanceWhiteAuto", config.auto_white_balance);
       if (config.auto_white_balance.compare(std::string("Off")) == 0) {
         setProperty(node_map_, "BalanceRatioSelector", "Blue");
-        setProperty(node_map_,
-                    "BalanceRatio",
-                    static_cast<float>(config.white_balance_blue_ratio));
+        setProperty(node_map_, "BalanceRatio", static_cast<float>(config.white_balance_blue_ratio));
         setProperty(node_map_, "BalanceRatioSelector", "Red");
-        setProperty(node_map_,
-                    "BalanceRatio",
-                    static_cast<float>(config.white_balance_red_ratio));
+        setProperty(node_map_, "BalanceRatio", static_cast<float>(config.white_balance_red_ratio));
       }
     }
 
@@ -177,20 +162,16 @@ void Camera::setNewConfiguration(const SpinnakerConfig& config,
 
     // Set Auto exposure lighting mode
     if (IsAvailable(node_map_->GetNode("AutoExposureLightingMode"))) {
-      setProperty(node_map_,
-                  "AutoExposureLightingMode",
-                  config.auto_exposure_lighting_mode);
+      setProperty(node_map_, "AutoExposureLightingMode", config.auto_exposure_lighting_mode);
     }
   } catch (const Spinnaker::Exception& e) {
-    throw std::runtime_error(
-        "[Camera::setNewConfiguration] Failed to set configuration: " +
-        std::string(e.what()));
+    throw std::runtime_error("[Camera::setNewConfiguration] Failed to set configuration: " +
+                             std::string(e.what()));
   }
 }
 
 // Image Size and Pixel Format
-void Camera::setImageControlFormats(
-    const spinnaker_camera_driver::SpinnakerConfig& config) {
+void Camera::setImageControlFormats(const spinnaker_camera_driver::SpinnakerConfig& config) {
   // Set Binning, Decimation, and Reverse
   setProperty(node_map_, "BinningHorizontal", config.image_format_binning);
   setProperty(node_map_, "BinningVertical", config.image_format_binning);
@@ -198,17 +179,14 @@ void Camera::setImageControlFormats(
   setProperty(node_map_, "ReverseY", config.image_format_y_reverse);
 
   // Grab the Max values after decimation
-  Spinnaker::GenApi::CIntegerPtr height_max_ptr =
-      node_map_->GetNode("HeightMax");
+  Spinnaker::GenApi::CIntegerPtr height_max_ptr = node_map_->GetNode("HeightMax");
   if (!IsAvailable(height_max_ptr) || !IsReadable(height_max_ptr)) {
-    throw std::runtime_error(
-        "[Camera::setImageControlFormats] Unable to read HeightMax");
+    throw std::runtime_error("[Camera::setImageControlFormats] Unable to read HeightMax");
   }
   height_max_ = height_max_ptr->GetValue();
   Spinnaker::GenApi::CIntegerPtr width_max_ptr = node_map_->GetNode("WidthMax");
   if (!IsAvailable(width_max_ptr) || !IsReadable(width_max_ptr)) {
-    throw std::runtime_error(
-        "[Camera::setImageControlFormats] Unable to read WidthMax");
+    throw std::runtime_error("[Camera::setImageControlFormats] Unable to read WidthMax");
   }
   width_max_ = width_max_ptr->GetValue();
 
@@ -306,11 +284,9 @@ int Camera::getWidthMax() { return width_max_; }
 // float Camera::getCameraFrameRate()
 //{
 //}
-Spinnaker::GenApi::CNodePtr Camera::readProperty(
-    const Spinnaker::GenICam::gcstring property_name) {
+Spinnaker::GenApi::CNodePtr Camera::readProperty(const Spinnaker::GenICam::gcstring property_name) {
   Spinnaker::GenApi::CNodePtr ptr = node_map_->GetNode(property_name);
-  if (!Spinnaker::GenApi::IsAvailable(ptr) ||
-      !Spinnaker::GenApi::IsReadable(ptr)) {
+  if (!Spinnaker::GenApi::IsAvailable(ptr) || !Spinnaker::GenApi::IsReadable(ptr)) {
     throw std::runtime_error("Unable to get parmeter " + property_name);
   }
   return ptr;

@@ -90,9 +90,8 @@ class SpinnakerCamera {
    * \return Returns true when the configuration could be applied without
    * modification.
    */
-  void setNewConfiguration(
-      const spinnaker_camera_driver::SpinnakerConfig& config,
-      const uint32_t& level);
+  void setNewConfiguration(const spinnaker_camera_driver::SpinnakerConfig& config,
+                           const uint32_t& level);
 
   /** Parameters that need a sensor to be stopped completely when changed. */
   static const uint8_t LEVEL_RECONFIGURE_CLOSE = 3;
@@ -172,8 +171,7 @@ class SpinnakerCamera {
   void setGain(const float& gain);
   int getHeightMax();
   int getWidthMax();
-  Spinnaker::GenApi::CNodePtr readProperty(
-      const Spinnaker::GenICam::gcstring property_name);
+  Spinnaker::GenApi::CNodePtr readProperty(const Spinnaker::GenICam::gcstring property_name);
 
   uint32_t getSerial() { return serial_; }
 
@@ -183,8 +181,7 @@ class SpinnakerCamera {
 
   uint16_t getbitsPerPixel(const std::string& image_format);
   std::string getRosImageEncoding(const std::string& image_format);
-  Spinnaker::PixelFormatEnums getPixelFormatEnum(
-      const std::string& image_format);
+  Spinnaker::PixelFormatEnums getPixelFormatEnum(const std::string& image_format);
 
  private:
   uint32_t serial_;  ///< A variable to hold the serial number of
@@ -200,12 +197,11 @@ class SpinnakerCamera {
 
   Spinnaker::ChunkData image_metadata_;
 
-  std::mutex mutex_;  ///< A mutex to make sure that we don't try to
-                      ///< grabImages while reconfiguring or vice versa.
-  volatile bool
-      captureRunning_;  ///< A status boolean that checks if the camera has
-                        ///< been started and is loading images
-                        ///  into its buffer.
+  std::mutex mutex_;              ///< A mutex to make sure that we don't try to
+                                  ///< grabImages while reconfiguring or vice versa.
+  volatile bool captureRunning_;  ///< A status boolean that checks if the camera has
+                                  ///< been started and is loading images
+                                  ///  into its buffer.
 
   /// If true, camera is currently running in color mode, otherwise camera is
   /// running in mono mode

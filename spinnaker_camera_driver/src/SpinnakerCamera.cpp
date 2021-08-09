@@ -67,19 +67,15 @@ SpinnakerCamera::SpinnakerCamera()
       captureRunning_(false) {
   system_ = Spinnaker::System::GetInstance();
 
-  const Spinnaker::LibraryVersion spinnakerLibraryVersion =
-      system_->GetLibraryVersion();
+  const Spinnaker::LibraryVersion spinnakerLibraryVersion = system_->GetLibraryVersion();
   ROS_INFO_STREAM("Spinnaker library version: "
-                  << spinnakerLibraryVersion.major << "."
-                  << spinnakerLibraryVersion.minor << "."
-                  << spinnakerLibraryVersion.type << "."
-                  << spinnakerLibraryVersion.build);
+                  << spinnakerLibraryVersion.major << "." << spinnakerLibraryVersion.minor << "."
+                  << spinnakerLibraryVersion.type << "." << spinnakerLibraryVersion.build);
 
   ROS_INFO_STREAM("Retreiving list of cameras...");
   camList_ = system_->GetCameras();
   unsigned int num_cameras = camList_.GetSize();
-  ROS_INFO_STREAM_ONCE(
-      "[SpinnakerCamera]: Number of cameras detected: " << num_cameras);
+  ROS_INFO_STREAM_ONCE("[SpinnakerCamera]: Number of cameras detected: " << num_cameras);
 
   // Setting pixel format bit length
   bit_set_16.insert("BayerGR16");
@@ -112,12 +108,11 @@ void SpinnakerCamera::checkUSBMemory() {
     if (mem >= 1000)
       ROS_INFO_STREAM("[ OK ] USB memory: " << mem << " MB");
     else {
-      ROS_FATAL_STREAM(
-          "  USB memory on system too low ("
-          << mem
-          << " MB)! Must be at least 1000 MB. Run: \nsudo sh -c \"echo 1000 "
-             "> /sys/module/usbcore/parameters/usbfs_memory_mb\"\n "
-             "Terminating...");
+      ROS_FATAL_STREAM("  USB memory on system too low ("
+                       << mem
+                       << " MB)! Must be at least 1000 MB. Run: \nsudo sh -c \"echo 1000 "
+                          "> /sys/module/usbcore/parameters/usbfs_memory_mb\"\n "
+                          "Terminating...");
       ros::shutdown();
     }
   } else {
@@ -126,9 +121,8 @@ void SpinnakerCamera::checkUSBMemory() {
   }
 }
 
-void SpinnakerCamera::setNewConfiguration(
-    const spinnaker_camera_driver::SpinnakerConfig& config,
-    const uint32_t& level) {
+void SpinnakerCamera::setNewConfiguration(const spinnaker_camera_driver::SpinnakerConfig& config,
+                                          const uint32_t& level) {
   // Check if camera is connected
   if (!pCam_) {
     // Check USB memory only the first time
@@ -191,8 +185,7 @@ void SpinnakerCamera::connect() {
         throw std::runtime_error(
             "[SpinnakerCamera::connect] Could not find camera with serial "
             "number " +
-            serial_string +
-            ". Is that camera plugged in? Error: " + std::string(e.what()));
+            serial_string + ". Is that camera plugged in? Error: " + std::string(e.what()));
       }
     } else {
       // Connect to any camera (the first)
@@ -206,8 +199,7 @@ void SpinnakerCamera::connect() {
       }
     }
     if (!pCam_ || !pCam_->IsValid()) {
-      throw std::runtime_error(
-          "[SpinnakerCamera::connect] Failed to obtain camera reference.");
+      throw std::runtime_error("[SpinnakerCamera::connect] Failed to obtain camera reference.");
     }
 
     try {
@@ -216,8 +208,7 @@ void SpinnakerCamera::connect() {
 
       if (serial_ == 0) {
         Spinnaker::GenApi::CStringPtr serial_ptr =
-            static_cast<Spinnaker::GenApi::CStringPtr>(
-                genTLNodeMap.GetNode("DeviceSerialNumber"));
+            static_cast<Spinnaker::GenApi::CStringPtr>(genTLNodeMap.GetNode("DeviceSerialNumber"));
         if (IsAvailable(serial_ptr) && IsReadable(serial_ptr)) {
           serial_ = atoi(serial_ptr->GetValue().c_str());
           ROS_INFO("[SpinnakerCamera::connect]: Using Serial: %i", serial_);
@@ -228,15 +219,13 @@ void SpinnakerCamera::connect() {
       }
 
       Spinnaker::GenApi::CEnumerationPtr device_type_ptr =
-          static_cast<Spinnaker::GenApi::CEnumerationPtr>(
-              genTLNodeMap.GetNode("DeviceType"));
+          static_cast<Spinnaker::GenApi::CEnumerationPtr>(genTLNodeMap.GetNode("DeviceType"));
 
       if (IsAvailable(device_type_ptr) && IsReadable(device_type_ptr)) {
-        ROS_INFO_STREAM("[SpinnakerCamera::connect]: Detected device type: "
-                        << device_type_ptr->ToString());
+        ROS_INFO_STREAM(
+            "[SpinnakerCamera::connect]: Detected device type: " << device_type_ptr->ToString());
 
-        if (device_type_ptr->GetCurrentEntry() ==
-            device_type_ptr->GetEntryByName("U3V")) {
+        if (device_type_ptr->GetCurrentEntry() == device_type_ptr->GetEntryByName("U3V")) {
           Spinnaker::GenApi::CEnumerationPtr device_speed_ptr =
               static_cast<Spinnaker::GenApi::CEnumerationPtr>(
                   genTLNodeMap.GetNode("DeviceCurrentSpeed"));
@@ -265,12 +254,10 @@ void SpinnakerCamera::connect() {
       node_map_ = &pCam_->GetNodeMap();
 
       // detect model and set camera_ accordingly;
-      Spinnaker::GenApi::CStringPtr model_name =
-          node_map_->GetNode("DeviceModelName");
+      Spinnaker::GenApi::CStringPtr model_name = node_map_->GetNode("DeviceModelName");
       std::string model_name_str(model_name->ToString());
 
-      ROS_INFO("[SpinnakerCamera::connect]: Camera model name: %s",
-               model_name_str.c_str());
+      ROS_INFO("[SpinnakerCamera::connect]: Camera model name: %s", model_name_str.c_str());
       if (is_bluerov_camera_)
         camera_.reset(new BlueROVCamera(node_map_));
       else if (model_name_str.find("Blackfly S") != std::string::npos)
@@ -281,16 +268,14 @@ void SpinnakerCamera::connect() {
         camera_.reset(new Gh3(node_map_));
       else {
         camera_.reset(new Camera(node_map_));
-        ROS_WARN(
-            "SpinnakerCamera::connect: Could not detect camera model name.");
+        ROS_WARN("SpinnakerCamera::connect: Could not detect camera model name.");
       }
 
       // Configure chunk data - Enable Metadata
       // SpinnakerCamera::ConfigureChunkData(*node_map_);
     } catch (const Spinnaker::Exception& e) {
-      throw std::runtime_error(
-          "[SpinnakerCamera::connect] Failed to connect to camera. Error: " +
-          std::string(e.what()));
+      throw std::runtime_error("[SpinnakerCamera::connect] Failed to connect to camera. Error: " +
+                               std::string(e.what()));
     } catch (const std::runtime_error& e) {
       throw std::runtime_error(
           "[SpinnakerCamera::connect] Failed to configure chunk data. Error: " +
@@ -337,9 +322,8 @@ void SpinnakerCamera::start() {
       captureRunning_ = true;
     }
   } catch (const Spinnaker::Exception& e) {
-    throw std::runtime_error(
-        "[SpinnakerCamera::start] Failed to start capture with error: " +
-        std::string(e.what()));
+    throw std::runtime_error("[SpinnakerCamera::start] Failed to start capture with error: " +
+                             std::string(e.what()));
   }
 }
 
@@ -350,15 +334,13 @@ void SpinnakerCamera::stop() {
       captureRunning_ = false;
       pCam_->EndAcquisition();
     } catch (const Spinnaker::Exception& e) {
-      throw std::runtime_error(
-          "[SpinnakerCamera::stop] Failed to stop capture with error: " +
-          std::string(e.what()));
+      throw std::runtime_error("[SpinnakerCamera::stop] Failed to stop capture with error: " +
+                               std::string(e.what()));
     }
   }
 }
 
-void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
-                                const std::string& frame_id) {
+void SpinnakerCamera::grabImage(sensor_msgs::Image* image, const std::string& frame_id) {
   std::lock_guard<std::mutex> scopedLock(mutex_);
 
   // Check if Camera is connected and Running
@@ -370,13 +352,13 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
       //  std::printf("\033[100m format: %s \n", format.c_str());
 
       if (image_ptr->IsIncomplete()) {
-        throw std::runtime_error(
-            "[SpinnakerCamera::grabImage] Image received from camera " +
-            std::to_string(serial_) + " is incomplete.");
+        throw std::runtime_error("[SpinnakerCamera::grabImage] Image received from camera " +
+                                 std::to_string(serial_) + " is incomplete.");
       } else {
         // Set Image Time Stamp
-        image->header.stamp.sec = image_ptr->GetTimeStamp() * 1e-9;
-        image->header.stamp.nsec = image_ptr->GetTimeStamp();
+        uint64_t stamp = image_ptr->GetTimeStamp();
+        image->header.stamp.sec = stamp * 1e-9;
+        image->header.stamp.nsec = stamp % 1000000000;
 
         // Check the bits per pixel.
         size_t bitsPerPixel = image_ptr->GetBitsPerPixel();
@@ -387,19 +369,16 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
         uint16_t pixel_size = getbitsPerPixel(pixel_format);
 
         // ROS_DEBUG_STREAM("Pixel Format: " << pixel_format);
-        ROS_FATAL_STREAM_COND(
-            pixel_size != bitsPerPixel,
-            "Bits Per Pixel do not match between image and format."
-                << bitsPerPixel << " vs " << pixel_size);
+        ROS_FATAL_STREAM_COND(pixel_size != bitsPerPixel,
+                              "Bits Per Pixel do not match between image and format."
+                                  << bitsPerPixel << " vs " << pixel_size);
         std::string imageEncoding = getRosImageEncoding(pixel_format);
         // ROS_DEBUG_STREAM("Ros Image Encoding: " << imageEncoding);
 
         Spinnaker::GenApi::CEnumerationPtr color_filter_ptr =
-            static_cast<Spinnaker::GenApi::CEnumerationPtr>(
-                node_map_->GetNode("PixelColorFilter"));
+            static_cast<Spinnaker::GenApi::CEnumerationPtr>(node_map_->GetNode("PixelColorFilter"));
 
-        Spinnaker::GenICam::gcstring color_filter_str =
-            color_filter_ptr->ToString();
+        Spinnaker::GenICam::gcstring color_filter_str = color_filter_ptr->ToString();
 
         // ROS_DEBUG_STREAM("Pixel Color Filter: " << color_filter_str.c_str());
         int width = image_ptr->GetWidth();
@@ -430,8 +409,7 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
         //               << "Xpadding: " << XPadding << "YPadding: " << YPadding
         //               << "Encoding: " << imageEncoding);
 
-        fillImage(
-            *image, imageEncoding, height, width, stride, image_ptr->GetData());
+        fillImage(*image, imageEncoding, height, width, stride, image_ptr->GetData());
         image->header.frame_id = frame_id;
       }  // end else
     } catch (const Spinnaker::Exception& e) {
@@ -446,8 +424,7 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
         "start "
         "capturing frames first.");
   } else {
-    throw std::runtime_error(
-        "[SpinnakerCamera::grabImage] Not connected to the camera.");
+    throw std::runtime_error("[SpinnakerCamera::grabImage] Not connected to the camera.");
   }
 }  // end grabImage
 
@@ -456,8 +433,7 @@ void SpinnakerCamera::setTimeout(const double& timeout) {
 }
 void SpinnakerCamera::setDesiredCamera(const uint32_t& id) { serial_ = id; }
 
-void SpinnakerCamera::ConfigureChunkData(
-    const Spinnaker::GenApi::INodeMap& nodeMap) {
+void SpinnakerCamera::ConfigureChunkData(const Spinnaker::GenApi::INodeMap& nodeMap) {
   ROS_INFO_STREAM("*** CONFIGURING CHUNK DATA ***");
   try {
     // Activate chunk mode
@@ -467,8 +443,7 @@ void SpinnakerCamera::ConfigureChunkData(
     // of every image captured until it is disabled. Chunk data can also be
     // retrieved from the nodemap.
     //
-    Spinnaker::GenApi::CBooleanPtr ptrChunkModeActive =
-        nodeMap.GetNode("ChunkModeActive");
+    Spinnaker::GenApi::CBooleanPtr ptrChunkModeActive = nodeMap.GetNode("ChunkModeActive");
     if (!Spinnaker::GenApi::IsAvailable(ptrChunkModeActive) ||
         !Spinnaker::GenApi::IsWritable(ptrChunkModeActive)) {
       throw std::runtime_error("Unable to activate chunk mode. Aborting...");
@@ -491,12 +466,10 @@ void SpinnakerCamera::ConfigureChunkData(
     //
     Spinnaker::GenApi::NodeList_t entries;
     // Retrieve the selector node
-    Spinnaker::GenApi::CEnumerationPtr ptrChunkSelector =
-        nodeMap.GetNode("ChunkSelector");
+    Spinnaker::GenApi::CEnumerationPtr ptrChunkSelector = nodeMap.GetNode("ChunkSelector");
     if (!Spinnaker::GenApi::IsAvailable(ptrChunkSelector) ||
         !Spinnaker::GenApi::IsReadable(ptrChunkSelector)) {
-      throw std::runtime_error(
-          "Unable to retrieve chunk selector. Aborting...");
+      throw std::runtime_error("Unable to retrieve chunk selector. Aborting...");
     }
     // Retrieve entries
     ptrChunkSelector->GetEntries(entries);
@@ -515,8 +488,7 @@ void SpinnakerCamera::ConfigureChunkData(
 
       ROS_INFO_STREAM("\t" << ptrChunkSelectorEntry->GetSymbolic() << ": ");
       // Retrieve corresponding boolean
-      Spinnaker::GenApi::CBooleanPtr ptrChunkEnable =
-          nodeMap.GetNode("ChunkEnable");
+      Spinnaker::GenApi::CBooleanPtr ptrChunkEnable = nodeMap.GetNode("ChunkEnable");
       // Enable the boolean, thus enabling the corresponding chunk data
       if (!Spinnaker::GenApi::IsAvailable(ptrChunkEnable)) {
         ROS_INFO("Node not available");
@@ -549,8 +521,7 @@ uint16_t SpinnakerCamera::getbitsPerPixel(const std::string& image_format) {
     return 0;
 }
 
-std::string SpinnakerCamera::getRosImageEncoding(
-    const std::string& image_format) {
+std::string SpinnakerCamera::getRosImageEncoding(const std::string& image_format) {
   if (image_format == "BayerRG8") {
     return sensor_msgs::image_encodings::BAYER_RGGB8;
   } else if (image_format == "BayerGR8") {
@@ -580,8 +551,7 @@ std::string SpinnakerCamera::getRosImageEncoding(
   }
 }
 
-Spinnaker::PixelFormatEnums SpinnakerCamera::getPixelFormatEnum(
-    const std::string& image_format) {
+Spinnaker::PixelFormatEnums SpinnakerCamera::getPixelFormatEnum(const std::string& image_format) {
   if (image_format == "BayerRG8") {
     return Spinnaker::PixelFormatEnums::PixelFormat_BayerRG8;
   } else if (image_format == "BayerGR8") {

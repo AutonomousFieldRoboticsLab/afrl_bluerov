@@ -52,23 +52,18 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class CameraTimeoutException : public std::runtime_error {
  public:
   CameraTimeoutException() : runtime_error("Image not found within timeout.") {}
-  explicit CameraTimeoutException(const std::string& msg)
-      : runtime_error(msg.c_str()) {}
+  explicit CameraTimeoutException(const std::string& msg) : runtime_error(msg.c_str()) {}
 };
 
 class CameraNotRunningException : public std::runtime_error {
  public:
   CameraNotRunningException()
-      : runtime_error(
-            "Camera is currently not running.  Please start the capture.") {}
-  explicit CameraNotRunningException(const std::string& msg)
-      : runtime_error(msg.c_str()) {}
+      : runtime_error("Camera is currently not running.  Please start the capture.") {}
+  explicit CameraNotRunningException(const std::string& msg) : runtime_error(msg.c_str()) {}
 };
 
 class CameraImageNotReadyException : public std::runtime_error {
  public:
-  CameraImageNotReadyException()
-      : runtime_error("Image is currently not ready.") {}
-  explicit CameraImageNotReadyException(const std::string& msg)
-      : runtime_error(msg.c_str()) {}
+  CameraImageNotReadyException() : runtime_error("Image is currently not ready.") {}
+  explicit CameraImageNotReadyException(const std::string& msg) : runtime_error(msg.c_str()) {}
 };

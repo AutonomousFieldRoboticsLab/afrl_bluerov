@@ -42,7 +42,8 @@ logging.basicConfig(level=logging.INFO)
 
 URL_TEMPLATE = URL_TEMPLATES = {
     'deb': 'https://packages.clearpathrobotics.com/stable/flir/Spinnaker/Ubuntu{version}/spinnaker-1.27.0.48-Ubuntu{version}-{arch}-pkg.tar.gz',
-    'src': None         # if we ever have non-deb archives that require manual extraction, those package URLS will go here.
+    # if we ever have non-deb archives that require manual extraction, those package URLS will go here.
+    'src': None
 }
 
 ARCHS = {
@@ -144,9 +145,9 @@ ARCHS = {
 
 
 OS_LIBRARY_VERSION = {
-  'jessie': 'current',
-  'xenial': 'current',
-  'bionic': 'future'
+    'jessie': 'current',
+    'xenial': 'current',
+    'bionic': 'future'
 }
 
 arch = sys.argv[1]
@@ -181,7 +182,8 @@ if not os.path.exists(os.path.join(os.getcwd(), "usr/lib/")):
             tar.extractall()
 
     logging.info("Unpacking debs.")
-    debs = glob.glob(os.path.join(os.getcwd(), folder_name, "*spinnaker-*.deb"))
+    debs = glob.glob(os.path.join(
+        os.getcwd(), folder_name, "*spinnaker-*.deb"))
     unpack_dir = os.path.join(os.getcwd())
     if not os.path.exists(unpack_dir):
         os.makedirs(unpack_dir)
@@ -194,4 +196,5 @@ if not os.path.exists(os.path.join(os.getcwd(), "usr/lib/")):
     logging.info('Copying shared library to {0}'.format(destination_folder))
     if not os.path.exists(destination_folder):
         os.makedirs(destination_folder)
-    shutil.copyfile(src_file, os.path.join(destination_folder, 'libSpinnaker.so'))
+    shutil.copyfile(src_file, os.path.join(
+        destination_folder, 'libSpinnaker.so'))

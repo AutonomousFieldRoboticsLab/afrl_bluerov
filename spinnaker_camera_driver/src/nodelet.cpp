@@ -53,7 +53,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // ROS and associated nodelet interface and PLUGINLIB declaration header
 #include <camera_info_manager/camera_info_manager.h>  // ROS library that publishes CameraInfo topics
-#include <diagnostic_updater/diagnostic_updater.h>  // Headers for publishing diagnostic messages.
+#include <diagnostic_updater/diagnostic_updater.h>    // Headers for publishing diagnostic messages.
 #include <diagnostic_updater/publisher.h>
 #include <dynamic_reconfigure/server.h>  // Needed for the dynamic_reconfigure gui service to run
 #include <image_exposure_msgs/ExposureSequence.h>  // Message type for configuring gain and white balance.
@@ -111,8 +111,7 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
    * driver_base/SensorLevels.h for more information.
    */
 
-  void paramCallback(const spinnaker_camera_driver::SpinnakerConfig& config,
-                     uint32_t level) {
+  void paramCallback(const spinnaker_camera_driver::SpinnakerConfig& config, uint32_t level) {
     config_ = config;
 
     try {
@@ -160,8 +159,8 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
     if (!diagThread_)  // We need to connect
     {
       // Start the thread to loop through and publish messages
-      diagThread_.reset(new boost::thread(boost::bind(
-          &spinnaker_camera_driver::SpinnakerCameraNodelet::diagPoll, this)));
+      diagThread_.reset(new boost::thread(
+          boost::bind(&spinnaker_camera_driver::SpinnakerCameraNodelet::diagPoll, this)));
     }
   }
 
@@ -175,8 +174,8 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
     if (!pubThread_)  // We need to connect
     {
       // Start the thread to loop through and publish messages
-      pubThread_.reset(new boost::thread(boost::bind(
-          &spinnaker_camera_driver::SpinnakerCameraNodelet::devicePoll, this)));
+      pubThread_.reset(new boost::thread(
+          boost::bind(&spinnaker_camera_driver::SpinnakerCameraNodelet::devicePoll, this)));
     }
   }
 
@@ -227,16 +226,10 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
 
     // Start up the dynamic_reconfigure service, note that this needs to stick
     // around after this function ends
-    srv_ = std::make_shared<
-        dynamic_reconfigure::Server<spinnaker_camera_driver::SpinnakerConfig> >(
+    srv_ = std::make_shared<dynamic_reconfigure::Server<spinnaker_camera_driver::SpinnakerConfig> >(
         pnh);
-    dynamic_reconfigure::Server<
-        spinnaker_camera_driver::SpinnakerConfig>::CallbackType f =
-        boost::bind(
-            &spinnaker_camera_driver::SpinnakerCameraNodelet::paramCallback,
-            this,
-            _1,
-            _2);
+    dynamic_reconfigure::Server<spinnaker_camera_driver::SpinnakerConfig>::CallbackType f =
+        boost::bind(&spinnaker_camera_driver::SpinnakerCameraNodelet::paramCallback, this, _1, _2);
 
     srv_->setCallback(f);
 
@@ -247,8 +240,7 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
     // Start the camera info manager and attempt to load any configurations
     std::stringstream cinfo_name;
     cinfo_name << serial;
-    cinfo_.reset(new camera_info_manager::CameraInfoManager(
-        nh, cinfo_name.str(), camera_info_url));
+    cinfo_.reset(new camera_info_manager::CameraInfoManager(nh, cinfo_name.str(), camera_info_url));
 
     // Publish topics using ImageTransport through camera_info_manager (gives
     // cool things like compression)
@@ -261,25 +253,17 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
     updater_.setHardwareID("spinnaker_camera " + cinfo_name.str());
 
     // Set up diagnostics aggregator publisher and diagnostics manager
-    ros::SubscriberStatusCallback diag_cb =
-        boost::bind(&SpinnakerCameraNodelet::diagCb, this);
-    diagnostics_pub_.reset(
-        new ros::Publisher(nh.advertise<diagnostic_msgs::DiagnosticArray>(
-            "/diagnostics", 1, diag_cb, diag_cb)));
+    ros::SubscriberStatusCallback diag_cb = boost::bind(&SpinnakerCameraNodelet::diagCb, this);
+    diagnostics_pub_.reset(new ros::Publisher(
+        nh.advertise<diagnostic_msgs::DiagnosticArray>("/diagnostics", 1, diag_cb, diag_cb)));
 
     diag_man = std::unique_ptr<DiagnosticsManager>(new DiagnosticsManager(
         frame_id_, std::to_string(spinnaker_.getSerial()), diagnostics_pub_));
+    diag_man->addDiagnostic("DeviceTemperature", true, std::make_pair(0.0f, 90.0f), -10.0f, 95.0f);
     diag_man->addDiagnostic(
-        "DeviceTemperature", true, std::make_pair(0.0f, 90.0f), -10.0f, 95.0f);
-    diag_man->addDiagnostic("AcquisitionResultingFrameRate",
-                            true,
-                            std::make_pair(10.0f, 60.0f),
-                            5.0f,
-                            90.0f);
-    diag_man->addDiagnostic(
-        "PowerSupplyVoltage", true, std::make_pair(4.5f, 5.2f), 4.4f, 5.3f);
-    diag_man->addDiagnostic(
-        "PowerSupplyCurrent", true, std::make_pair(0.4f, 0.6f), 0.3f, 1.0f);
+        "AcquisitionResultingFrameRate", true, std::make_pair(10.0f, 60.0f), 5.0f, 90.0f);
+    diag_man->addDiagnostic("PowerSupplyVoltage", true, std::make_pair(4.5f, 5.2f), 4.4f, 5.3f);
+    diag_man->addDiagnostic("PowerSupplyCurrent", true, std::make_pair(0.4f, 0.6f), 0.3f, 1.0f);
     diag_man->addDiagnostic<int>("DeviceUptime");
     diag_man->addDiagnostic<int>("U3VMessageChannelID");
   }
@@ -304,11 +288,11 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
 
     State state = DISCONNECTED;
     State previous_state = NONE;
-
-    while (
-        !boost::this_thread::interruption_requested())  // Block until we need
-                                                        // to stop this thread.
-    {
+    ros::Time start_epoch_time;
+    uint64_t start_camera_time;
+    uint64_t prev_time = 0;
+    // Block until we need to stop this thread.
+    while (!boost::this_thread::interruption_requested()) {
       bool state_changed = state != previous_state;
 
       previous_state = state;
@@ -367,8 +351,7 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
             NODELET_DEBUG("Connected to camera.");
 
             // Set last configuration, forcing the reconfigure level to stop
-            spinnaker_.setNewConfiguration(
-                config_, SpinnakerCamera::LEVEL_RECONFIGURE_STOP);
+            spinnaker_.setNewConfiguration(config_, SpinnakerCamera::LEVEL_RECONFIGURE_STOP);
 
             // Set the timeout for grabbing images.
             try {
@@ -387,8 +370,7 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
               sub_ = getMTNodeHandle().subscribe(
                   "image_exposure_sequence",
                   10,
-                  &spinnaker_camera_driver::SpinnakerCameraNodelet::
-                      gainWBCallback,
+                  &spinnaker_camera_driver::SpinnakerCameraNodelet::gainWBCallback,
                   this);
             }
 
@@ -426,15 +408,30 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
           try {
             sensor_msgs::ImagePtr image(new sensor_msgs::Image);
             // Get the image from the camera library
-            NODELET_DEBUG_ONCE(
-                "Starting a new grab from camera with serial {%d}.",
-                spinnaker_.getSerial());
+            NODELET_DEBUG_ONCE("Starting a new grab from camera with serial {%d}.",
+                               spinnaker_.getSerial());
             spinnaker_.grabImage(image.get(), frame_id_);
+            if (state_changed) {
+              ROS_DEBUG_STREAM("!!!! Started streaming !!!");
+              start_epoch_time = ros::Time::now();
+              start_camera_time = image->header.stamp.toNSec();
+            }
 
-            // // Set the CameraInfo message
+            uint64_t current_time = image->header.stamp.toNSec();
+            if (current_time <= prev_time) {
+              ROS_FATAL_STREAM("Image stamps are not monotonic. ");
+            }
+            prev_time = current_time;
+
+            ros::Duration offset;
+            offset.fromNSec(current_time - start_camera_time);
+            image->header.stamp = start_epoch_time + offset;
+
             ci_.reset(new sensor_msgs::CameraInfo(cinfo_->getCameraInfo()));
             ci_->header.stamp = image->header.stamp;
             ci_->header.frame_id = image->header.frame_id;
+            // ROS_INFO_STREAM("Secs:" << image->header.stamp.sec
+            //                         << " nsec:" << image->header.stamp.nsec);
             // The height, width, distortion model, and parameters are all
             // filled in by camera info manager.
             ci_->binning_x = binning_x_;
@@ -471,11 +468,10 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
 
   void gainWBCallback(const image_exposure_msgs::ExposureSequence& msg) {
     try {
-      NODELET_DEBUG_ONCE(
-          "Gain callback:  Setting gain to %f and white balances to %u, %u",
-          msg.gain,
-          msg.white_balance_blue,
-          msg.white_balance_red);
+      NODELET_DEBUG_ONCE("Gain callback:  Setting gain to %f and white balances to %u, %u",
+                         msg.gain,
+                         msg.white_balance_blue,
+                         msg.white_balance_red);
       gain_ = msg.gain;
 
       spinnaker_.setGain(static_cast<float>(gain_));
@@ -490,8 +486,7 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
   }
 
   /* Class Fields */
-  std::shared_ptr<
-      dynamic_reconfigure::Server<spinnaker_camera_driver::SpinnakerConfig> >
+  std::shared_ptr<dynamic_reconfigure::Server<spinnaker_camera_driver::SpinnakerConfig> >
       srv_;  ///< Needed to
              ///  initialize
              ///  and keep the
@@ -501,12 +496,10 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
       it_;  ///< Needed to initialize and keep the ImageTransport in
             /// scope.
   std::shared_ptr<camera_info_manager::CameraInfoManager>
-      cinfo_;  ///< Needed to initialize and keep the
-               /// CameraInfoManager in scope.
-  image_transport::CameraPublisher
-      it_pub_;  ///< CameraInfoManager ROS publisher
-  std::shared_ptr<
-      diagnostic_updater::DiagnosedPublisher<wfov_camera_msgs::WFOVImage> >
+      cinfo_;                                ///< Needed to initialize and keep the
+                                             /// CameraInfoManager in scope.
+  image_transport::CameraPublisher it_pub_;  ///< CameraInfoManager ROS publisher
+  std::shared_ptr<diagnostic_updater::DiagnosedPublisher<wfov_camera_msgs::WFOVImage> >
       pub_;  ///< Diagnosed
   std::shared_ptr<ros::Publisher> diagnostics_pub_;
   /// publisher, has to be
@@ -517,18 +510,15 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
 
   std::mutex connect_mutex_;
 
-  diagnostic_updater::Updater
-      updater_;  ///< Handles publishing diagnostics messages.
+  diagnostic_updater::Updater updater_;  ///< Handles publishing diagnostics messages.
   double min_freq_;
   double max_freq_;
 
   SpinnakerCamera spinnaker_;      ///< Instance of the SpinnakerCamera library,
                                    ///< used to interface with the hardware.
   sensor_msgs::CameraInfoPtr ci_;  ///< Camera Info message.
-  std::string
-      frame_id_;  ///< Frame id for the camera messages, defaults to 'camera'
-  std::shared_ptr<boost::thread>
-      pubThread_;  ///< The thread that reads and publishes the images.
+  std::string frame_id_;           ///< Frame id for the camera messages, defaults to 'camera'
+  std::shared_ptr<boost::thread> pubThread_;  ///< The thread that reads and publishes the images.
   std::shared_ptr<boost::thread>
       diagThread_;  ///< The thread that reads and publishes the diagnostics.
 
@@ -545,9 +535,9 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
   size_t roi_y_offset_;  ///< Camera Info ROI y offset
   size_t roi_height_;    ///< Camera Info ROI height
   size_t roi_width_;     ///< Camera Info ROI width
-  bool do_rectify_;  ///< Whether or not to rectify as if part of an image.  Set
-                     ///< to false if whole image, and true if in
-                     /// ROI mode.
+  bool do_rectify_;      ///< Whether or not to rectify as if part of an image.  Set
+                         ///< to false if whole image, and true if in
+                         /// ROI mode.
 
   /// Configuration:
   spinnaker_camera_driver::SpinnakerConfig config_;

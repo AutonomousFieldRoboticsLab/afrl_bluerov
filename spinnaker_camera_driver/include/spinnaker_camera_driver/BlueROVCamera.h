@@ -40,17 +40,14 @@ class BlueROVCamera : public Camera {
   explicit BlueROVCamera(Spinnaker::GenApi::INodeMap* node_map);
   ~BlueROVCamera();
 
-  void setNewConfiguration(const SpinnakerConfig& config,
-                           const uint32_t& level) override;
+  void setNewConfiguration(const SpinnakerConfig& config, const uint32_t& level) override;
 
   void init() override;
 
-  void setImageControlFormats(
-      const spinnaker_camera_driver::SpinnakerConfig& config) override;
+  void setImageControlFormats(const spinnaker_camera_driver::SpinnakerConfig& config) override;
 
-  bool isConfigChanged(
-      const std::string& config_name,
-      const spinnaker_camera_driver::SpinnakerConfig& new_config);
+  bool isConfigChanged(const std::string& config_name,
+                       const spinnaker_camera_driver::SpinnakerConfig& new_config);
 
  private:
   SpinnakerConfig old_config_;

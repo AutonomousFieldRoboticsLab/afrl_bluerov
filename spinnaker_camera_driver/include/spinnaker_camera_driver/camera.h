@@ -52,9 +52,8 @@ class Camera {
  public:
   explicit Camera(Spinnaker::GenApi::INodeMap* node_map);
   ~Camera() {}
-  virtual void setNewConfiguration(
-      const spinnaker_camera_driver::SpinnakerConfig& config,
-      const uint32_t& level);
+  virtual void setNewConfiguration(const spinnaker_camera_driver::SpinnakerConfig& config,
+                                   const uint32_t& level);
 
   /** Parameters that need a sensor to be stopped completely when changed. */
   static const uint8_t LEVEL_RECONFIGURE_CLOSE = 3;
@@ -69,8 +68,7 @@ class Camera {
   int getHeightMax();
   int getWidthMax();
 
-  Spinnaker::GenApi::CNodePtr readProperty(
-      const Spinnaker::GenICam::gcstring property_name);
+  Spinnaker::GenApi::CNodePtr readProperty(const Spinnaker::GenICam::gcstring property_name);
 
   inline std::string getPixelFormat() { return pixel_format_; }
 
@@ -92,8 +90,7 @@ class Camera {
    * desired video mode, will be changed if unsupported.
    */
   virtual void setFrameRate(const float frame_rate);
-  virtual void setImageControlFormats(
-      const spinnaker_camera_driver::SpinnakerConfig& config);
+  virtual void setImageControlFormats(const spinnaker_camera_driver::SpinnakerConfig& config);
   /*!
    * \brief Set parameters relative to GigE cameras.
    *

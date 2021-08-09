@@ -31,8 +31,7 @@ void SpinnakerTestNode::test() {
 
   Spinnaker::InterfaceList interfaceList = system->GetInterfaces();
   unsigned int numInterfaces = interfaceList.GetSize();
-  std::printf("\033[93m[Spinnaker] Number of interfaces detected: %d \n",
-              numInterfaces);
+  std::printf("\033[93m[Spinnaker] Number of interfaces detected: %d \n", numInterfaces);
 
   Spinnaker::CameraList camList = system->GetCameras();
   unsigned int numCameras = camList.GetSize();
@@ -57,8 +56,7 @@ void SpinnakerTestNode::test() {
           nodeMapTLDevice.GetNode("DeviceSerialNumber");
       if (Spinnaker::GenApi::IsAvailable(ptrDeviceSerialNumber) &&
           Spinnaker::GenApi::IsReadable(ptrDeviceSerialNumber)) {
-        std::cout << "\033[92m[" << i << "]\t"
-                  << ptrDeviceSerialNumber->ToString() << std::endl;
+        std::cout << "\033[92m[" << i << "]\t" << ptrDeviceSerialNumber->ToString() << std::endl;
       }
     }
   }

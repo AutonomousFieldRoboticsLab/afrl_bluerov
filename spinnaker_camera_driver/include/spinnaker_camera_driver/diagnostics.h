@@ -94,8 +94,7 @@ class DiagnosticsManager {
                      int upper_bound = 0);
   void addDiagnostic(const Spinnaker::GenICam::gcstring name,
                      bool check_ranges = false,
-                     std::pair<float, float> operational = std::make_pair(0.0,
-                                                                          0.0),
+                     std::pair<float, float> operational = std::make_pair(0.0, 0.0),
                      float lower_bound = 0,
                      float upper_bound = 0);
 
@@ -124,9 +123,7 @@ class DiagnosticsManager {
    * device
    */
   template <typename T>
-  diagnostic_msgs::DiagnosticStatus getDiagStatus(
-      const diagnostic_params<T>& param,
-      const T value);
+  diagnostic_msgs::DiagnosticStatus getDiagStatus(const diagnostic_params<T>& param, const T value);
 
   // constuctor parameters
   std::string camera_name_;

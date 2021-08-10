@@ -10,8 +10,8 @@ camera_matrix:
 distortion_model: plumb_bob
 distortion_coefficients:
   rows: 1
-  cols: 5
-  data: [-0.28045252,  0.07554431, -0.00058271, -0.00192323, 0]
+  cols: 4
+  data: [-0.28045252,  0.07554431, -0.00058271, -0.00192323]
 rectification_matrix:
   rows: 3
   cols: 3

@@ -1,4 +1,4 @@
 
 [submodule "aruco_ros"]
 	path = aruco_ros
-	url = https://github.com/AutonomousFieldRoboticsLab/aruco_ros.git
+	url = git@github.com:AutonomousFieldRoboticsLab/aruco_ros.git

@@ -1,4 +1,4 @@
 
 [submodule "ar_track_alvar"]
 	path = ar_track_alvar
-	url = https://github.com/AutonomousFieldRoboticsLab/ar_track_alvar.git
+	url = https://github.com/AutonomousFieldRoboticsLab/aruco_ros.git

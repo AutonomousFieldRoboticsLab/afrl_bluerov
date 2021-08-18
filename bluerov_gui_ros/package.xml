@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>bluerov_gui_ros</name>
+  <version>0.0.0</version>
+  <description>The bluerov GUI package</description>
+
+  <author email="albertoq@cse.sc.edu">Alberto Quattrini Li</author>
+  <author email="bjoshi@email.sc.edu">Bharat Joshi</author>
+
+  <maintainer email="bjoshi@email.sc.edu">Bharat Joshi</maintainer>
+
+  <!-- One license tag required, multiple allowed, one license per tag -->
+  <!-- Commonly used license strings: -->
+  <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
+  <license>TODO</license>
+
+
+  <url type="website">http://wiki.ros.org/stereo_rig_gui</url>
+
+  <!-- Use test_depend for packages you need only for testing: -->
+  <!--   <test_depend>gtest</test_depend> -->
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>message_generation</build_depend>
+
+  <exec_depend>roslaunch</exec_depend>
+  <exec_depend>message_runtime</exec_depend>
+  <exec_depend>rospy</exec_depend>
+
+  
+  <depend>roscpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+
+</package>

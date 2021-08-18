@@ -1,0 +1,40 @@
+# Config based on docs/reference-operational-joystick-defaults.png
+# Joystick Axex configuration
+axes_map:
+  forward: 1
+  lateral: 0
+  yaw: 2
+  throttle: 3
+
+# Scaling 
+axes_scale:
+  forward: 1.0
+  lateral: 1.0
+  yaw: 1.0
+  throttle: 1.0
+
+# RC channels based on Ardusub (need to check for SimpleSub)
+rc_map:
+  forward: 4
+  lateral: 5
+  yaw: 3
+  throttle: 2
+
+# Setting minimum RC command to 1200 (min possible 1000)   
+rc_min:
+  forward: 1200
+  lateral: 1200
+  yaw: 1200
+  throttle: 1200
+
+# Setting maximum RC command to 1800 ( max possible 2000)
+rc_max:
+  forward: 1800
+  lateral: 1800
+  yaw: 1800
+  throttle: 1800
+
+# Joystick button use
+button_map:
+  arm: 10
+  disarm: 9

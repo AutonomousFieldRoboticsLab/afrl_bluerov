@@ -1,0 +1,9 @@
+# Camera name to be changed.
+string camera
+# parameter to be changed.
+string parameter
+bool increase # Increase True, Decrease False
+---
+# Whether the change was successful or not.
+bool success
+

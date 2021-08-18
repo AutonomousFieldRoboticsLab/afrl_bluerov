@@ -1,0 +1,6 @@
+<launch>
+
+    <node pkg="bluerov_gui_ros" type="gui.py" name="bluerov_gui" output="screen"/>
+    <node pkg="bluerov_gui_ros" type="bluerov_menu.py" name="bluerov_menu" output="screen"/>
+
+</launch>

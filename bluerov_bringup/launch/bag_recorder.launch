@@ -1,0 +1,11 @@
+<launch>
+
+<arg name="bag.name" default="/home/afrl/bags/florida"/>
+<arg name="bag.topics" default="
+    /bluerov/image_raw/compressed
+    /mavros/imu/data
+    /mavros/imu/data_raw
+     "/>
+
+  <node pkg="rosbag" type="record" name="$(anon record)" args="--output-prefix=$(arg bag.name) $(arg bag.topics)" />
+</launch>

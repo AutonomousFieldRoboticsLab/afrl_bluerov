@@ -1,0 +1,22 @@
+<package format="2">
+    <name>bluerov_bringup</name>
+    <version>0.1.1</version>
+    <description> bluerov_bringup provides roslaunch scripts for starting the stereo rig. </description>
+    <author email="albertoq@cse.sc.edu"> Alberto Quattrini Li</author>
+    <author email="bjoshi@email.sc.edu"> Bharat Joshi</author>
+
+    <maintainer email="bjoshi@email.sc.edu">Bharat Joshi</maintainer>
+
+    <license>BSD</license>
+    <url type="website">http://ros.org/wiki/stereo_rig_bringup</url>
+
+    <buildtool_depend>catkin</buildtool_depend>
+    
+    <exec_depend>roslaunch</exec_depend>
+    <exec_depend>rospy</exec_depend>
+
+    <exec_depend>bluerov_mavros</exec_depend>
+    <exec_depend>spinnaker_camera_driver</exec_depend>
+    <exec_depend>mavros</exec_depend>
+  
+</package>

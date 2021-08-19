@@ -9,11 +9,11 @@
   <arg name="component_id" default="240"/>
   <arg name="tgt_system" default="1"/>
   <arg name="tgt_component" default="1"/>
-  <arg name="pluginlists_yaml" value="$(find bluerov_mavros)/launch/apm_pluginlists.yaml"/>
+  <arg name="pluginlists_yaml" value="$(find bluerov_bringup)/launch/apm_pluginlists.yaml"/>
   <arg name="config_yaml" value="$(find mavros)/launch/apm_config.yaml"/>
   <arg name="log_output" default="screen"/>
 
-  <node pkg="mavros" type="mavros_node" name="mavros" required="true" clear_params="true" output="$(arg log_output)">
+  <node pkg="mavros" type="mavros_node" name="mavros" respawn="true"  clear_params="true" output="$(arg log_output)">
     <param name="fcu_url" value="$(arg fcu_url)"/>
     <param name="gcs_url" value="$(arg gcs_url)"/>
     <param name="system_id" value="$(arg system_id)"/>

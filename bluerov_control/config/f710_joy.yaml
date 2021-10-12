@@ -5,6 +5,7 @@ axes_map:
   lateral: 0
   yaw: 2
   throttle: 3
+  lights: 4
 
 # Scaling 
 axes_scale:
@@ -12,6 +13,7 @@ axes_scale:
   lateral: 1.0
   yaw: 1.0
   throttle: 1.0
+  lights: 1.0
 
 # RC channels based on Ardusub (need to check for SimpleSub)
 rc_map:
@@ -36,5 +38,5 @@ rc_max:
 
 # Joystick button use
 button_map:
-  arm: 10
-  disarm: 9
+  arm: 9
+  disarm: 8

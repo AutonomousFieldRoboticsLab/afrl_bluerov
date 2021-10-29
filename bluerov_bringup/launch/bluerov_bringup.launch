@@ -1,0 +1,6 @@
+<launch>
+
+<include file="$(find bluerov_bringup)/launch/mavros.launch"/>
+<include file="$(find spinnaker_camera_driver)/launch/bluerov.launch"/>
+
+</launch>

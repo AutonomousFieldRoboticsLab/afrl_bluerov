@@ -85,19 +85,6 @@
      <string>Diagnostics</string>
     </property>
    </widget>
-   <widget class="QLabel" name="depth_label">
-    <property name="geometry">
-     <rect>
-      <x>9</x>
-      <y>30</y>
-      <width>81</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Depth</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="temperature_label">
     <property name="geometry">
      <rect>
@@ -124,7 +111,7 @@
      <string>Pressure</string>
     </property>
    </widget>
-   <widget class="QLabel" name="depth_value_label">
+   <widget class="QLabel" name="depth_value">
     <property name="geometry">
      <rect>
       <x>100</x>
@@ -189,32 +176,6 @@
      <string/>
     </property>
    </widget>
-   <widget class="QLabel" name="imu_health">
-    <property name="geometry">
-     <rect>
-      <x>150</x>
-      <y>30</y>
-      <width>81</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>IMU health</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="sonar_health">
-    <property name="geometry">
-     <rect>
-      <x>150</x>
-      <y>50</y>
-      <width>91</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Sonar health</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="imu_health_value">
     <property name="geometry">
      <rect>
@@ -247,7 +208,7 @@
     <rect>
      <x>0</x>
      <y>216</y>
-     <width>480</width>
+     <width>288</width>
      <height>106</height>
     </rect>
    </property>
@@ -257,12 +218,12 @@
    <property name="frameShadow">
     <enum>QFrame::Raised</enum>
    </property>
-   <widget class="QLabel" name="health_label">
+   <widget class="QLabel" name="imu">
     <property name="geometry">
      <rect>
       <x>10</x>
       <y>5</y>
-      <width>80</width>
+      <width>50</width>
       <height>30</height>
      </rect>
     </property>
@@ -275,18 +236,18 @@
      <enum>QFrame::NoFrame</enum>
     </property>
     <property name="text">
-     <string>Health:</string>
+     <string>IMU:</string>
     </property>
     <property name="textFormat">
      <enum>Qt::AutoText</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="health_status_label">
+   <widget class="QLabel" name="imu_status">
     <property name="geometry">
      <rect>
-      <x>85</x>
+      <x>60</x>
       <y>7</y>
-      <width>80</width>
+      <width>25</width>
       <height>25</height>
      </rect>
     </property>
@@ -295,17 +256,20 @@
       <pointsize>12</pointsize>
      </font>
     </property>
+    <property name="styleSheet">
+     <string notr="true">border: 2px solid blue;</string>
+    </property>
     <property name="frameShape">
-     <enum>QFrame::Box</enum>
+     <enum>QFrame::StyledPanel</enum>
     </property>
     <property name="text">
      <string/>
     </property>
    </widget>
-   <widget class="QLabel" name="recording_label">
+   <widget class="QLabel" name="recording">
     <property name="geometry">
      <rect>
-      <x>245</x>
+      <x>144</x>
       <y>5</y>
       <width>100</width>
       <height>30</height>
@@ -320,12 +284,12 @@
      <string>Recording: </string>
     </property>
    </widget>
-   <widget class="QLabel" name="recording_value_label">
+   <widget class="QLabel" name="recording_status">
     <property name="geometry">
      <rect>
-      <x>355</x>
+      <x>250</x>
       <y>7</y>
-      <width>80</width>
+      <width>25</width>
       <height>25</height>
      </rect>
     </property>
@@ -333,6 +297,9 @@
      <font>
       <pointsize>12</pointsize>
      </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border: 2px solid blue;</string>
     </property>
     <property name="frameShape">
      <enum>QFrame::Box</enum>
@@ -344,12 +311,12 @@
      <enum>Qt::AutoText</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="message_label">
+   <widget class="QLabel" name="depth">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>70</y>
-      <width>91</width>
+      <y>40</y>
+      <width>70</width>
       <height>30</height>
      </rect>
     </property>
@@ -362,19 +329,112 @@
      <enum>QFrame::NoFrame</enum>
     </property>
     <property name="text">
-     <string>Message:</string>
+     <string>Depth:</string>
     </property>
     <property name="textFormat">
      <enum>Qt::AutoText</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="message_value_label">
+   <widget class="QLabel" name="depth_status">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>43</y>
+      <width>25</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border: 2px solid blue;</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="battery">
+    <property name="geometry">
+     <rect>
+      <x>144</x>
+      <y>40</y>
+      <width>100</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Battery: </string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="battery_status">
+    <property name="geometry">
+     <rect>
+      <x>250</x>
+      <y>43</y>
+      <width>25</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border: 2px solid blue;</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Box</enum>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::AutoText</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="temperature">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>70</y>
+      <width>90</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
+    </property>
+    <property name="text">
+     <string>Temp: </string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::AutoText</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="temperature_value">
     <property name="geometry">
      <rect>
       <x>100</x>
       <y>70</y>
-      <width>351</width>
-      <height>25</height>
+      <width>50</width>
+      <height>30</height>
      </rect>
     </property>
     <property name="font">

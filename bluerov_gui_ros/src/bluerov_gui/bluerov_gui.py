@@ -36,6 +36,7 @@ from sensor_msgs.msg import FluidPressure
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import Imu
 from sensor_msgs.msg import Temperature
+from sensor_msgs.msg import BatteryState
 
 # Libraries to import for Menu and Tags
 import roslib
@@ -56,6 +57,11 @@ CAMERA_NAME = "/bluerov"
 IMAGE_RAW_STRING = "image_raw"
 CAMERA_NODE = '/bluerov/spinnaker_camera_nodelet/'
 TAG_TOPIC = '/bluerov/aruco_marker_publisher/markers_list'
+TEMPERATURE_TOPIC = '/mavros/imu/temperature_baro'
+IMU_TOPIC = '/mavros/imu/data'
+PRESSURE_TOPIC = '/mavros/imu/static_pressure'
+BATTERY_TOPIC = '/mavros/battery'
+
 
 LAUNCH_BAG_FILE = "barbados2017_logger.launch"
 MESSAGE_TIMEOUT = 1.0
@@ -63,13 +69,13 @@ DECIMAL_PLACES = 1  # Decimal places after the dot in floats.
 METER_TO_FOOT = 3.28084  # 1 m = 3.28084 ft.
 DEPTH_IN_FEET = True  # Convert value from sensor in feet.
 
-DATA_LABEL_FORMAT = '{} ({})'
+DATA_LABEL_FORMAT = '{}({}):'
 
-DEPTH_STRING = "depth"
+DEPTH_STRING = "Depth"
 METER_STRING = "m"
 FEET_STRING = "ft"
 
-TEMPERATURE_STRING = "temp."
+TEMPERATURE_STRING = "Temp."
 CELSIUS_STRING = "C"
 
 PRESSURE_STRING = "press."
@@ -79,10 +85,30 @@ EXPOSURE_STRING = "exp."
 MILLISECOND_STRING = "ms"
 
 EXPOSURE_FORMAT = "C1: {0:.1f}, C2: {1:.1f}"
-
+BACKGROUND_COLOR_FORMAT = 'background-color: {}'
 IMAGE_UPDATE_INTERVAL = 0.1
 
+BATTERY_VOLTAGE_THRESHOLD = 12.8
+
 # Menu and Tags Related #TODO not global variables!
+
+
+class Counter(object):
+    """Counter class."""
+
+    def __init__(self, initial_value=0):
+        """Initialization."""
+        self.count = initial_value
+        self.first_timestamp = None
+        self.last_timestamp = None
+
+    def increment(self):
+        """Increment the counter."""
+        self.count += 1
+
+    def get_count(self):
+        """Get the value of the counter."""
+        return self.count
 
 
 class RosHandler(QtCore.QObject):
@@ -113,8 +139,14 @@ class RosHandler(QtCore.QObject):
 
         # Dynamic reconfiguration of nodes.
         # TODO(aql) more general for arbitrary nodes.
-        self.camera_parameters_client = dynamic_reconfigure.client.Client(
-            camera_node)
+
+        self.camera_parameters_client = None
+
+        try:
+            self.camera_parameters_client = dynamic_reconfigure.client.Client(
+                camera_node, timeout=5.0)
+        except:
+            print("Could not connect to camera node.")
 
         # self.get_camera_parameters()
         self.start_recording_ar_first_time = None
@@ -135,6 +167,11 @@ class RosHandler(QtCore.QObject):
         self.message_time = None
         self.display_tags = True
 
+        self.imu_msg_counter = Counter()
+        self.pressure_msg_counter = Counter()
+        self.battery_msg_counter = Counter()
+        self.battery_voltage = 0.0
+
         self.ros_initialization()
 
     def ros_initialization(self):
@@ -146,14 +183,10 @@ class RosHandler(QtCore.QObject):
         rospy.Subscriber("/bluerov/image_raw", Image,
                          self.image_callback, queue_size=1)
 
-        # rospy.Subscriber("bar30/temperature", Temperature,
-        #                  self.temperature_value_callback, queue_size=1)
-        # rospy.Subscriber("bar30/depth", Depth,
-        #                  self.depth_value_callback, queue_size=1)
-        # rospy.Subscriber("bar30/pressure", FluidPressure,
-        #                  self.pressure_value_callback, queue_size=1)
-        # rospy.Subscriber("imu/imu", Imu, self.health_callback, queue_size=1)
-
+        rospy.Subscriber(TEMPERATURE_TOPIC, Temperature, self.temperature_value_callback, queue_size=1)
+        rospy.Subscriber(PRESSURE_TOPIC, FluidPressure, self.pressure_value_callback, queue_size=1)
+        rospy.Subscriber(IMU_TOPIC, Imu, self.imu_health_callback, queue_size=1)
+        rospy.Subscriber(BATTERY_TOPIC, BatteryState, self.battery_value_callback, queue_size=1)
         # Topic for AR tag menu.
         # rospy.Subscriber(TAG_TOPIC, UInt32MultiArray,
         #                  self.ar_callback, queue_size=5)
@@ -167,12 +200,54 @@ class RosHandler(QtCore.QObject):
         rospy.Service("/stereo_rig/ui/menu", Menu, self.menu)
         rospy.Service("/stereo_rig/record", Empty, self.handle_record_bag)
         rospy.Timer(rospy.Duration(2), self.refresh_display)
+        rospy.Timer(rospy.Duration(1), self.send_diagnostics)
 
         rospy.Subscriber("/stereo_rig/ui/msg", String,
                          self.handle_message, queue_size=1)
         rospy.Service("/stereo_rig/slave1/parameters",
                       ChangeParameter, self.change_parameter)
         # END Menu from Aqua
+
+    def send_diagnostics(self, event):
+        # Handle IMU diagnostics
+
+        time_now = rospy.get_time()
+        imu_health = 0
+        if self.imu_msg_counter.first_timestamp is not None and self.imu_msg_counter.last_timestamp is not None:
+            rate = self.imu_msg_counter.get_count() / (self.imu_msg_counter.last_timestamp - self.imu_msg_counter.first_timestamp)
+            imu_health = 1 if rate >= 100 else 0
+
+            if time_now - self.imu_msg_counter.last_timestamp > 1.0:
+                imu_health = 0
+
+        self.diagnostic_updated.emit(imu_health, "imu")
+
+        # Handle pressure diagnostics
+        pressure_sensor_health = 0
+        if self.pressure_msg_counter.first_timestamp is not None and self.pressure_msg_counter.last_timestamp is not None:
+            rate = self.pressure_msg_counter.get_count() / (self.pressure_msg_counter.last_timestamp -
+                                                            self.pressure_msg_counter.first_timestamp)
+            pressure_sensor_health = 1 if rate >= 5 else 0
+
+            if time_now - self.pressure_msg_counter.last_timestamp > 1.0:
+                pressure_sensor_health = 0
+
+        self.diagnostic_updated.emit(pressure_sensor_health, "pressure")
+
+        # Handle battery diagnostics
+        battery_health = 0
+        if self.battery_msg_counter.first_timestamp is not None and self.battery_msg_counter.last_timestamp is not None:
+            rate = self.battery_msg_counter.get_count() / (self.battery_msg_counter.last_timestamp -
+                                                           self.battery_msg_counter.first_timestamp)
+            battery_health = 1 if rate >= 5 else 0
+
+            if time_now - self.battery_health.last_timestamp > 1.0:
+                battery_health = 0
+
+            if self.battery_voltage < BATTERY_VOLTAGE_THRESHOLD:
+                battery_health = 0
+
+        self.diagnostic_updated.emit(battery_health, "battery")
 
     def message_initialization(self):
         """Initializes GUI with messages.
@@ -224,26 +299,32 @@ class RosHandler(QtCore.QObject):
     def pressure_value_callback(self, value_msg):
         """Get value and display it. TODO(aql) more complete documentation.
         """
-        self.diagnostic_updated.emit(value_msg.fluid_pressure, "pressure")
+        t_sec = value_msg.header.stamp.to_sec()
+        self.pressure_msg_counter.last_timestamp = t_sec
+        self.pressure_msg_counter.increment()
 
-    def health_callback(self, msg):
+        if self.pressure_msg_counter.first_timestamp is None:
+            self.pressure_msg_counter.first_timestamp = t_sec
+
+    def imu_health_callback(self, msg):
         """Get health information about topics. TODO(aql) more complete documentation.
         """
         t_sec = msg.header.stamp.to_sec()
-        # + '.%03d' % (msg.header.stamp.nsecs / 1000000)
-        msg_current_time = time.strftime('%H:%M:%S', time.localtime(t_sec))
-        if "Imu" in type(msg).__name__:
-            if not self.last_imu_time or \
-                    msg.header.stamp - self.last_imu_time > rospy.Duration.from_sec(IMAGE_UPDATE_INTERVAL):
-                self.diagnostic_updated.emit(t_sec, "imu")
-                # self.change_diagnostic_value(t_sec, "imu")
-                self.last_imu_time = msg.header.stamp
-        elif "Range" in type(msg).__name__:
-            if not self.last_sonar_time or \
-                    msg.header.stamp - self.last_sonar_time > rospy.Duration.from_sec(IMAGE_UPDATE_INTERVAL):
-                self.diagnostic_updated.emit(t_sec, "sonar")
-                # self.change_diagnostic_value(t_sec, "sonar")
-                self.last_sonar_time = msg.header.stamp
+        self.imu_msg_counter.last_timestamp = t_sec
+        self.imu_msg_counter.increment()
+
+        if self.imu_msg_counter.first_timestamp is None:
+            self.imu_msg_counter.first_timestamp = t_sec
+
+    def battery_value_callback(self, msg):
+        t_sec = msg.header.stamp.to_sec()
+        self.battery_msg_counter.last_timestamp = t_sec
+        self.battery_msg_counter.increment()
+
+        if self.battery_msg_counter.first_timestamp is None:
+            self.battery_msg_counter.first_timestamp = t_sec
+
+        self.battery_voltage = msg.voltage
 
     def ar_callback(self, markers_msg):
         """Menu associated to AR tags. TODO(aql) more complete documentation.
@@ -309,8 +390,9 @@ class RosHandler(QtCore.QObject):
         """Get current camera_parameters of the two camera nodes.
             TODO(aql) more complete documentation.
         """
-        self.camera_parameters = self.camera_parameters_client.get_configuration(
-            timeout=1.0)
+        if self.camera_parameters_client is not None:
+            self.camera_parameters = self.camera_parameters_client.get_configuration(
+                timeout=1.0)
 
     def set_camera_parameters(self, parameter):
         """Change current camera_parameters. TODO(aql) more complete documentation.
@@ -575,28 +657,9 @@ class StereoRigGuiProgram(QtWidgets.QDialog):
         # Camera names (should match what is in header).
         self.camera_name = camera_name
 
-        # Format of depth.
-        # TODO setup of different measure unit.
-        self.depth_in_feet = DEPTH_IN_FEET
-        # Set measure unit for various data.
-        if self.depth_in_feet:
-            self.depth_label.setText(
-                DATA_LABEL_FORMAT.format(DEPTH_STRING, FEET_STRING))
-        else:
-            self.depth_label.setText(
-                DATA_LABEL_FORMAT.format(DEPTH_STRING, METER_STRING))
-
         # Temperature.
-        self.temperature_label.setText(
+        self.temperature.setText(
             DATA_LABEL_FORMAT.format(TEMPERATURE_STRING, CELSIUS_STRING))
-
-        # Pressure.
-        self.pressure_label.setText(
-            DATA_LABEL_FORMAT.format(PRESSURE_STRING, MBAR_STRING))
-
-        # Exposure.
-        self.exposure_label.setText(DATA_LABEL_FORMAT.format(
-            EXPOSURE_STRING, MILLISECOND_STRING))
 
         # TODO create the menu.
         self.current_menu = "root"
@@ -647,28 +710,29 @@ class StereoRigGuiProgram(QtWidgets.QDialog):
     def change_diagnostic_value(self, value, label):
         """Change diagnostic value. TODO(aql) more complete documentation.
         """
+
+        color = 'green' if value == 1 else 'red'
+        command = BACKGROUND_COLOR_FORMAT.format(color)
         if label == "depth":
             if self.depth_in_feet:
                 value *= METER_TO_FOOT
             self.depth_value_label.setText(self.format_number.format(value))
         elif label == "temperature":
-            self.temperature_value_label.setText(
-                self.format_number.format(value))
+            self.temperature_value.setText(self.format_number.format(value))
         elif label == "pressure":
-            self.pressure_value_label.setText(self.format_number.format(value))
+            self.depth_status.setStyleSheet(command)
         elif label == "recording":
             self.recording_value_label.setText(str(bool(value)))
         elif label == "imu":
-            msg_current_time = time.strftime('%H:%M:%S', time.localtime(value))
-            self.imu_health_value.setText(msg_current_time)
-        elif label == "sonar":
-            msg_current_time = time.strftime('%H:%M:%S', time.localtime(value))
-            self.sonar_health_value.setText(msg_current_time)
+            self.imu_status.setStyleSheet(command)
+        elif label == 'battery':
+            self.battery_status.setStyleSheet(command)
 
     def change_log(self, log_message):
         """Set message in the logger part.
         """
-        self.message_value_label.setText(log_message)
+        # self.message_value_label.setText(log_message)
+        print("Test")
 
     def change_exposure(self, exposure_text):
         """Set exposure values in GUI.

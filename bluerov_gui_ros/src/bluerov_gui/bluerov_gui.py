@@ -640,7 +640,7 @@ class StereoRigGuiProgram(QtWidgets.QDialog):
         ui_file = os.path.join(rp.get_path('bluerov_gui_ros'),
                                'resource', 'bluerov.ui')
         loadUi(ui_file, self)
-        # self.setWindowFlags(QtCore.Qt.CustomizeWindowHint)
+        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
         self.app = app
         self.current_image = None
 

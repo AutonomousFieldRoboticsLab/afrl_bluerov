@@ -72,45 +72,6 @@
    <property name="frameShadow">
     <enum>QFrame::Raised</enum>
    </property>
-   <widget class="QLabel" name="diagnostic_header">
-    <property name="geometry">
-     <rect>
-      <x>6</x>
-      <y>7</y>
-      <width>101</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Diagnostics</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="temperature_label">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>50</y>
-      <width>91</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Temperature</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="pressure_label">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>70</y>
-      <width>101</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Pressure</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="depth_value">
     <property name="geometry">
      <rect>
@@ -150,19 +111,6 @@
      <string/>
     </property>
    </widget>
-   <widget class="QLabel" name="exposure_label">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>110</y>
-      <width>81</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Exposure</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="exposure_value_label">
     <property name="geometry">
      <rect>
@@ -200,6 +148,19 @@
     </property>
     <property name="text">
      <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="menu_question_label">
+    <property name="geometry">
+     <rect>
+      <x>9</x>
+      <y>0</y>
+      <width>181</width>
+      <height>211</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
     </property>
    </widget>
   </widget>

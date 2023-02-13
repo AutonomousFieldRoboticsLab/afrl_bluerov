@@ -44,6 +44,7 @@ import rospy
 import sys
 import os
 import time
+from aruco_msgs.msg import MarkerArray
 
 from std_srvs.srv import *
 from std_msgs.msg import String, UInt32MultiArray
@@ -124,6 +125,16 @@ class RosHandler(QtCore.QObject):
     diagnostic_updated = Signal(float, str)
     log_updated = Signal(str)
     cameras_updated = Signal(str)
+    question_updated = Signal(str)
+
+    def get_question(self):
+        return self._question
+
+    def set_question(self, val):
+        self._question = val
+        self.question_updated.emit(val)
+
+    question = property(get_question, set_question)
 
     def __init__(self, launch_bag_file, camera_name, camera_node):
         # Initialize the RosHandler as a QObject
@@ -241,7 +252,7 @@ class RosHandler(QtCore.QObject):
                                                            self.battery_msg_counter.first_timestamp)
             battery_health = 1 if rate >= 5 else 0
 
-            if time_now - self.battery_health.last_timestamp > 1.0:
+            if time_now - self.battery_msg_counter.last_timestamp > 1.0:
                 battery_health = 0
 
             if self.battery_voltage < BATTERY_VOLTAGE_THRESHOLD:
@@ -543,6 +554,7 @@ class RosHandler(QtCore.QObject):
         old_display_tags = self.display_tags
         self.display_tags = False
         self.question = ''
+
         ss = ""
         if req.title:
             ss = req.title
@@ -560,7 +572,7 @@ class RosHandler(QtCore.QObject):
         node = rospy.Rate(5)
 
         self.tag_sub = rospy.Subscriber(
-            "stereo_rig/tags", Tags, self.handleTag, queue_size=1)
+            "/aruco_marker_publisher/markers", MarkerArray, self.handleTag, queue_size=1)
         while not rospy.is_shutdown() and (not timedout) and (not done) and (self.tag_id < 0 or self.tag_id > len(req.opts)):
             begin = rospy.get_rostime()
             self.question = str(ss)
@@ -583,6 +595,7 @@ class RosHandler(QtCore.QObject):
                 done = True
             for i in range(0, 20):
                 node.sleep()
+
         self.question = ''
         self.tag_id = -1
         self.tag_sub.unregister()
@@ -604,11 +617,11 @@ class RosHandler(QtCore.QObject):
 
     '''
 
-    def handleTag(self, tags_msg):
-        if len(tags_msg.tags) == 0:
+    def handleTag(self, markers_msg):
+        if len(markers_msg.markers) == 0:
             self.tag_id = -1
         else:
-            self.tag_id = tags_msg.tags[0].id
+            self.tag_id = markers_msg.markers[0].id
 
     def handle_message(self, message):
         self.message = message.data
@@ -680,7 +693,14 @@ class StereoRigGuiProgram(QtWidgets.QDialog):
             self.change_diagnostic_value)
         self.ros_handler.log_updated.connect(self.change_log)
         self.ros_handler.cameras_updated.connect(self.change_exposure)
+        self.ros_handler.question_updated.connect(self.update_menu_question)
         self.ros_handler.message_initialization()
+
+
+    def update_menu_question(self, menu_question):
+        self.menu_question_label.setText(menu_question)
+        print("Updated menu question to: {}".format(menu_question))
+
 
     def change_image(self, image, label):
         """Change image of the frame. TODO(aql) more complete documentation.
@@ -722,7 +742,7 @@ class StereoRigGuiProgram(QtWidgets.QDialog):
         elif label == "pressure":
             self.depth_status.setStyleSheet(command)
         elif label == "recording":
-            self.recording_value_label.setText(str(bool(value)))
+            self.recording_status.setText(str(bool(value)))
         elif label == "imu":
             self.imu_status.setStyleSheet(command)
         elif label == 'battery':

@@ -51,6 +51,31 @@ class BlueROVMenu(GenericMenu):
     def handle_cam_msg(self, msg):
         pass
 
+    def action_svin_start(self):
+        print("SVIN-start action not implemented yet.")
+
+    def action_svin_stop(self):
+        print("SVIN-stop action not implemented yet.")
+
+    def action_square_timed(self):
+        print("Square-timed action not implmented yet.")
+
+    def action_square_svin(self):
+        print("Square-svin action not implemented yet.")
+
+    def action_lawnmower_timed(self):
+        print("Lawnmower-timed action not implmented yet.")
+
+    def action_lawnmower_svin(self):
+        print("Lawnmower-svin action not implemented yet.")
+
+    def action_record_start(self):
+        print("Record-start action not implemented yet.")
+
+    def action_record_stop(self):
+        print("Record-stop action not implemented yet.")
+
+
     def getMenu(self):
         small_trajec_time = 100
         large_trajec_time = 290
@@ -60,7 +85,37 @@ class BlueROVMenu(GenericMenu):
         small_ret_lawnmower_time = small_lawnmower_time + 90
         medium_lawnmower_time = 285
         large_lawnmower_time = 440
-        menu = {(1, 'StereoRigTroubleShoot'): {
+
+        menu = {
+            (0, 'SVIN'): {
+                (0, '<<'): '__back__',
+                (1, 'Start'): self.action_svin_start,
+                (2, 'Stop'): self.action_svin_stop,
+            },
+
+            (1, 'Square'): {
+                (0, '<<'): '__back__',
+                (1, 'Timed'): self.action_square_timed,
+                (2, 'SVIN'): self.action_square_svin,
+            },
+
+            (2, 'Lawnmower'): {
+                (0, '<<'): '__back__',
+                (1, 'Timed'): self.action_lawnmower_timed,
+                (1, 'SVIN'): self.action_lawnmower_svin,
+            },
+
+            (3, 'Record'): {
+                (0, '<<'): '__back__',
+                (1, 'Start'): self.action_record_start,
+                (2, 'Stop'): self.action_record_stop,
+            },
+        }
+
+
+        """    
+        menu = {
+            (1, 'StereoRigTroubleShoot'): {
             (1, '<<'): '__back__',
             (2, 'Relaunch nodes'): lambda: subprocess.Popen(["rosrun", "stereo_rig_bringup", "startup_stereo.sh"]),
             (3, 'Shutdown'): lambda: os.fork(subprocess.Popen(["sudo", "shutdown", "-hP", "now"],
@@ -76,7 +131,10 @@ class BlueROVMenu(GenericMenu):
                 (3, "Decrement"): lambda: self.slave1_exposure("/slave1", "exposure", False),
             }
         }
+
         }
+
+        """
         return menu
 
 

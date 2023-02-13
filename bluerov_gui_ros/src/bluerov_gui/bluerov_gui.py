@@ -136,6 +136,7 @@ class RosHandler(QtCore.QObject):
 
     question = property(get_question, set_question)
 
+
     def __init__(self, launch_bag_file, camera_name, camera_node):
         # Initialize the RosHandler as a QObject
         QtCore.QObject.__init__(self)
@@ -560,9 +561,9 @@ class RosHandler(QtCore.QObject):
             ss = req.title
         i = 0
         for r in req.opts:
-            ss = ss + str(i) + ':' + str(req.opts[i])
+            ss = ss + str(i) + ': ' + str(req.opts[i])
             if i != (len(req.opts) - 1):
-                ss = ss + '\n'
+                ss = ss + '\n\n'
             i = i + 1
 
         self.question = str(ss)
@@ -633,10 +634,13 @@ class RosHandler(QtCore.QObject):
             self.log_msg += self.message
             if (rospy.get_rostime - self.message_time).to_sec() > 1:
                 self.message = ""
+        
         if self.question:
             self.log_msg += self.question
+        
         if self.tag_id >= 0:
             self.log_msg += "Tag: " + str(self.tag_id) + '\n'
+        
         self.log_updated.emit(str(self.log_msg))
     ### END Menu handler from manager.cpp in Aqua ###
 
@@ -752,7 +756,7 @@ class StereoRigGuiProgram(QtWidgets.QDialog):
         """Set message in the logger part.
         """
         # self.message_value_label.setText(log_message)
-        print("Test")
+        self.log_textbox.setPlainText(log_message)
 
     def change_exposure(self, exposure_text):
         """Set exposure values in GUI.

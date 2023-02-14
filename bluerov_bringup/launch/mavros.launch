@@ -7,8 +7,8 @@
   <arg name="gcs_url" default=""/>
   <arg name="system_id" default="255"/>
   <arg name="component_id" default="240"/>
-  <arg name="tgt_system" default="1"/>
-  <arg name="tgt_component" default="1"/>
+  <arg name="tgt_system" default="2"/>
+  <arg name="tgt_component" default="2"/>
   <arg name="pluginlists_yaml" value="$(find bluerov_bringup)/launch/apm_pluginlists.yaml"/>
   <arg name="config_yaml" value="$(find mavros)/launch/apm_config.yaml"/>
   <arg name="log_output" default="screen"/>

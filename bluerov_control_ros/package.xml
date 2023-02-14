@@ -1,5 +1,5 @@
 <package format="2">
-  <name>bluerov_control</name>
+  <name>bluerov_control_ros</name>
   <version>0.0.1</version>
   <description>BlueROV control.</description>
 
@@ -19,7 +19,7 @@
   <exec_depend>roslaunch</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>joy</exec_depend>
-  
+
   <test_depend>roslaunch</test_depend>
 
 </package>

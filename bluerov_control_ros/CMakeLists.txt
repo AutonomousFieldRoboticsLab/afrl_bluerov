@@ -9,9 +9,10 @@ set(CMAKE_CXX_FLAGS "-march=native -O3 -Wall")
 find_package(catkin REQUIRED COMPONENTS 
             roscpp
             sensor_msgs
-            mavros)
+            mavros
+            geometry_msgs)
 
-catkin_package(CATKIN_DEPENDS roscpp sensor_msgs mavros joy)
+catkin_package(CATKIN_DEPENDS geometry_msgs roscpp sensor_msgs mavros joy)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -19,6 +20,7 @@ catkin_package(CATKIN_DEPENDS roscpp sensor_msgs mavros joy)
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
 # catkin_python_setup()
 
+find_package(Eigen3 REQUIRED)
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
@@ -26,6 +28,7 @@ catkin_package(CATKIN_DEPENDS roscpp sensor_msgs mavros joy)
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
 )
 
 include_directories(motor_control/include)

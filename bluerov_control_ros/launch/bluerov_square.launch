@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="bluerov_control_ros" type="bluerov_primitive_node" name="bluerov_square" output="screen">
+        <rosparam file="$(find bluerov_control_ros)/config/bluerov_control.yaml" />
+    </node>
+</launch>

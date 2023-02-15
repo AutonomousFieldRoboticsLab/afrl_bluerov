@@ -1,0 +1,18 @@
+pattern: square #trasect (0), square (1), or lawnmower (2)  
+feedback_type: attitude_with_depth #none (0), pose (1), attitude (2), attitude_with_depth (2)
+speed: 1.0 # float value from +1 to 0
+num_of_runs: 1 # How many times to execute square and lawnmower patterns
+
+square:
+  duration: 5.0 # float value in seconds
+  length: 10.0 # float value in meters
+
+trasect:
+  duration: 5.0 # float value in seconds
+  trasect_length: 10.0 # float value in meters
+
+lawnmower:
+  long_strip_duration: 10.0 # float value in seconds
+  short_strip_duration: 3.0 # float value in seconds
+  strip_length: 10.0 # float value in meters
+  strip_width: 3.0 # float value in meters

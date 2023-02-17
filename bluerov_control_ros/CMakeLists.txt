@@ -31,13 +31,23 @@ include_directories(
   ${EIGEN3_INCLUDE_DIR}
 )
 
-include_directories(motor_control/include)
-add_subdirectory(motor_control)
+# include_directories(motor_control/include)
+# add_subdirectory(motor_control)
 
-add_library(bluerov_control src/Primitives.cpp src/VelocityControl.cpp)
+add_library(bluerov_control 
+            src/Primitives.cpp
+            src/VelocityControl.cpp
+            src/Utils.cpp 
+            src/MotorControl.cpp)
+
+# target_link_libraries(bluerov_control motor_control)
 
 add_executable(bluerov_primitive_node src/bluerov_primitives_node.cpp)
-TARGET_LINK_LIBRARIES(bluerov_primitive_node bluerov_control motor_control ${catkin_LIBRARIES})
+target_link_libraries(bluerov_primitive_node bluerov_control ${catkin_LIBRARIES})
+
+add_executable(bluerov_transect_node src/bluerov_transect_node.cpp)
+target_link_libraries(bluerov_transect_node bluerov_control ${catkin_LIBRARIES})
+
 #############
 ## Install ##
 #############

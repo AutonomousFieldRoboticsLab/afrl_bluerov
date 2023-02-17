@@ -10,14 +10,14 @@
 #include "MotorControl.h"
 
 enum PrimitiveType {
-  TRASECT = 0,       // Move in a straight line
+  TRANSECT = 0,       // Move in a straight line
   SQUARE = 1,        // Perform a square
   BOUSTROPHEDON = 2  // Perform a lawnmower pattern
 };
 
 PrimitiveType primitiveTypeFromString(const std::string primitive_type) {
-  if (primitive_type == "trasect") {
-    return PrimitiveType::TRASECT;
+  if (primitive_type == "transect") {
+    return PrimitiveType::TRANSECT;
   } else if (primitive_type == "square") {
     return PrimitiveType::SQUARE;
   } else if (primitive_type == "lawnmower") {
@@ -86,21 +86,21 @@ class MotionPrimitive {
   void executeGlobalAttitude(const Eigen::Vector3d& target_attitude);
 };
 
-class Trasect : public MotionPrimitive {
+class Transect : public MotionPrimitive {
  public:
-  Trasect();
-  Trasect(float length = 5.0, float duration = 5.0);
-  Trasect(float length = 5.0,
+  Transect();
+  Transect(float length = 5.0, float duration = 5.0);
+  Transect(float length = 5.0,
           float duration = 5.0,
           float speed = 1.0,
           FeedbackMethod feedback_method = FeedbackMethod::ATTITUDE_WITH_DEPTH);
 
-  virtual ~Trasect();
+  virtual ~Transect();
 
   // TODO(bjoshi:) Need to change them to private and add getters and setters
 
-  float length_;    // Length of the trasect
-  float duration_;  // duration to complete trasect
+  float length_;    // Length of the transect
+  float duration_;  // duration to complete transect
 
   bool executeAttitudeFeedback(int num_of_times = 1) override;
   bool executePoseFeedback(int num_of_times = 1) override;

@@ -1,4 +1,4 @@
-pattern: square #trasect (0), square (1), or lawnmower (2)  
+pattern: square #transect (0), square (1), or lawnmower (2)  
 feedback_type: attitude_with_depth #none (0), pose (1), attitude (2), attitude_with_depth (2)
 environment: sea #sea, air, or fresh_water 
 speed: 1.0 # float value from +1 to 0
@@ -8,9 +8,9 @@ square:
   duration: 5.0 # float value in seconds
   length: 10.0 # float value in meters
 
-trasect:
+transect:
   duration: 5.0 # float value in seconds
-  trasect_length: 10.0 # float value in meters
+  transect_length: 10.0 # float value in meters
 
 lawnmower:
   long_strip_duration: 10.0 # float value in seconds

@@ -53,19 +53,19 @@ int main(int argc, char* argv[]) {
 
   ros::Subscriber pose_sub;
 
-  if (primitive_type == PrimitiveType::TRASECT) {
-    float trasect_length, duration;
-    // if we have acess to VIO Pose, we can execute the exact trasect length
+  if (primitive_type == PrimitiveType::TRANSECT) {
+    float transect_length, duration;
+    // if we have acess to VIO Pose, we can execute the exact transect length
     if (feedback_method == FeedbackMethod::POSE) {
-      nh_private.param<float>("trasect/trasect_length", trasect_length, 5.0);
+      nh_private.param<float>("transect/transect_length", transect_length, 5.0);
       pose_sub = nh.subscribe<geometry_msgs::PoseStamped>(
           "pose_topic", 100, &MotionPrimitive::setPose, motion_primitive_.get());
     } else {
-      nh_private.param<float>("trasect/duration", duration, 5.0);
+      nh_private.param<float>("transect/duration", duration, 5.0);
     }
-    motion_primitive_ = std::make_unique<Trasect>(trasect_length, duration, speed, feedback_method);
+    motion_primitive_ = std::make_unique<Transect>(transect_length, duration, speed, feedback_method);
   } else if (primitive_type == PrimitiveType::SQUARE) {
-    // if we have acess to VIO Pose, we can execute the exact trasect length
+    // if we have acess to VIO Pose, we can execute the exact transect length
     float square_length, duration;
     if (feedback_method == FeedbackMethod::POSE) {
       nh_private.param<float>("square/length", square_length, 5.0);

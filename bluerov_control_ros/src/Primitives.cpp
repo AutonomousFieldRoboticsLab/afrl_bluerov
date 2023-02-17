@@ -87,9 +87,9 @@ void MotionPrimitive::executeStraightLine(const double duration,
   int yaw_speed = (yaw - current_attitude_[2]) / M_PI;
 
   while (ros::ok() && (ros::Time::now() - start_time).toSec() < duration) {
-    std::vector<float> motor_intensities = motor_controller_->thrustToMotorIntensities(
+    std::vector<double> motor_intensities = motor_controller_->thrustToMotorIntensities(
         forward_speed, lateral_speed, throttle_speed, roll_speed, pitch_speed, yaw_speed);
-    motor_command_callback_(motor_intensities);
+    // motor_command_callback_(motor_intensities);
     rate.sleep();
   }
 }
@@ -113,24 +113,24 @@ void MotionPrimitive::executeGlobalAttitude(const Eigen::Vector3d& target_attitu
   int yaw_speed = (yaw - current_attitude_[2]) / M_PI;
 
   while (ros::ok() && (target_attitude - current_attitude_).norm() > 20.0 * M_PI / 180.0) {
-    std::vector<float> motor_intensities = motor_controller_->thrustToMotorIntensities(
+    std::vector<double> motor_intensities = motor_controller_->thrustToMotorIntensities(
         forward_speed, lateral_speed, throttle_speed, roll_speed, pitch_speed, yaw_speed);
-    motor_command_callback_(motor_intensities);
+    // motor_command_callback_(motor_intensities);
     rate.sleep();
   }
 }
 
-Trasect::Trasect() : MotionPrimitive(), length_(5.0), duration_(5.0) {}
+Transect::Transect() : MotionPrimitive(), length_(5.0), duration_(5.0) {}
 
-Trasect::Trasect(float length, float duration)
+Transect::Transect(float length, float duration)
     : MotionPrimitive(), length_(length), duration_(duration) {}
 
-Trasect::Trasect(float length, float duration, float speed, FeedbackMethod feedback_method)
+Transect::Transect(float length, float duration, float speed, FeedbackMethod feedback_method)
     : MotionPrimitive(speed, feedback_method), length_(length), duration_(duration) {}
 
-Trasect::~Trasect() {}
+Transect::~Transect() {}
 
-bool Trasect::executeAttitudeFeedback(int num_of_times) {
+bool Transect::executeAttitudeFeedback(int num_of_times) {
   ros::Time start_time = ros::Time::now();
   ros::Rate rate(10);
 
@@ -152,7 +152,7 @@ bool Trasect::executeAttitudeFeedback(int num_of_times) {
   return true;
 }
 
-bool Trasect::executePoseFeedback(int num_times) { return false; };
+bool Transect::executePoseFeedback(int num_times) { return false; };
 
 Square::Square() : MotionPrimitive(), length_(5.0), duration_(5.0) {}
 

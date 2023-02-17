@@ -10,7 +10,7 @@
 #include "MotorControl.h"
 
 enum PrimitiveType {
-  TRANSECT = 0,       // Move in a straight line
+  TRANSECT = 0,      // Move in a straight line
   SQUARE = 1,        // Perform a square
   BOUSTROPHEDON = 2  // Perform a lawnmower pattern
 };
@@ -53,6 +53,7 @@ FeedbackMethod feedbackMethodFromString(const std::string feedback_method) {
 class MotionPrimitive {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   float speed_;                    // Maximum speed of the vehicle
   FeedbackMethod feeback_method_;  // Feedback method to use
 
@@ -91,9 +92,9 @@ class Transect : public MotionPrimitive {
   Transect();
   Transect(float length = 5.0, float duration = 5.0);
   Transect(float length = 5.0,
-          float duration = 5.0,
-          float speed = 1.0,
-          FeedbackMethod feedback_method = FeedbackMethod::ATTITUDE_WITH_DEPTH);
+           float duration = 5.0,
+           float speed = 1.0,
+           FeedbackMethod feedback_method = FeedbackMethod::ATTITUDE_WITH_DEPTH);
 
   virtual ~Transect();
 

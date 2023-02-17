@@ -6,9 +6,11 @@
 
 void pressureCallback(const sensor_msgs::FluidPressure::ConstPtr& msg,
                       std::function<void(const double)> depth_callback,
-                      double fluid_density) {
-  ROS_INFO_STREAM_THROTTLE(10, "Pressure: " << msg->fluid_pressure);
+                      double fluid_density,
+                      std::string environment) {
   double depth = (msg->fluid_pressure - 101300.0f) / (fluid_density * 9.80665f);
+  ROS_INFO_STREAM_DELAYED_THROTTLE(10, "Pressure: " << msg->fluid_pressure << "\tDepth: " << depth);
+
   depth_callback(depth);
 }
 
@@ -67,10 +69,11 @@ int main(int argc, char* argv[]) {
   ros::Subscriber pressure_sub = nh.subscribe<sensor_msgs::FluidPressure>(
       "pressure_topic",
       10,
-      std::bind(pressureCallback, std::placeholders::_1, depth_callback, fluid_density));
+      std::bind(
+          pressureCallback, std::placeholders::_1, depth_callback, fluid_density, environment));
 
-  transect->execute(1);
-  while (ros::ok()) {
-    ros::spinOnce();
-  }
+  transect->execute();
+
+  ROS_INFO_STREAM("Done executing transect!!. Enjoy ");
+  return EXIT_SUCCESS;
 }

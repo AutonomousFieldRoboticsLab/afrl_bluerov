@@ -7,14 +7,14 @@
 
 class MotorControl {
  public:
-  MotorControl(VehicleType vehicle_type = VehicleType::BLUEROV2, uint8_t num_motors = 6);
+  MotorControl(VehicleType vehicle_type = VehicleType::BLUEROV2, int num_motors = 6);
 
   ~MotorControl() = default;
 
   VehicleType vehicle_type_;
 
   // Motor configuration
-  uint8_t num_motors_;
+  int num_motors_;
   std::vector<float> forward_factor_;
   std::vector<float> lateral_factor_;
   std::vector<float> throttle_factor_;
@@ -26,7 +26,7 @@ class MotorControl {
 
   std::vector<int> motor_pwm_;
 
-  void setMotorDirection(uint8_t motor_num, float direction);
+  void setMotorDirection(int motor_num, float direction);
   std::vector<double> thrustToMotorIntensities(const float forward,
                                                const float lateral,
                                                const float throttle,
@@ -36,7 +36,7 @@ class MotorControl {
 
  private:
   void setup();
-  void addMotorRaw6Dof(uint8_t motor_num,
+  void addMotorRaw6Dof(int motor_num,
                        float forward_factor,
                        float lateral_factor,
                        float throttle_factor,

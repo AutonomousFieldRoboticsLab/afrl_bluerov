@@ -1,3 +1,5 @@
+#pragma once
+
 #include <Eigen/Core>
 #include <cmath>
 
@@ -17,11 +19,9 @@ auto constrainInt = [](const int value, const int min, const int max) {
   return constrainValue<int>(value, min, max);
 };
 
-
 double ccwAngleBetweenVectors(double x1, double y1, double x2, double y2);
 double angleErrorRadians(double target_angle, double current_angle);
 Eigen::Vector3d getAngleError(const Eigen::Vector3d& target_rpy,
                               const Eigen::Vector3d& current_rpy);
-
 
 }  // namespace utils

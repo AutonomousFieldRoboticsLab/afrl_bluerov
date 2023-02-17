@@ -4,20 +4,35 @@
 #include <tf/LinearMath/Matrix3x3.h>
 
 #include <cmath>
-MotionPrimitive::MotionPrimitive() {
+
+#include "MotorUtils.h"
+MotionPrimitive::MotionPrimitive() : motor_controller_(nullptr) {
   speed_ = 1.0;
   feeback_method_ = FeedbackMethod::ATTITUDE_WITH_DEPTH;
   is_pose_initialized_ = false;
   is_attitude_initialized_ = false;
   is_depth_initialized_ = false;
+
+  // TODO(bjoshi:) Find better way to do this.
+  motor_controller_ = std::make_unique<MotorControl>(VehicleType::BLUEROV2, 6);
+  motor_controller_->setMotorDirection(0, -1.0);
+  motor_controller_->setMotorDirection(1, -1.0);
+  motor_controller_->setMotorDirection(2, -1.0);
 }
 
-MotionPrimitive::MotionPrimitive(float speed, FeedbackMethod feedback_method) {
+MotionPrimitive::MotionPrimitive(float speed, FeedbackMethod feedback_method)
+    : motor_controller_(nullptr) {
   speed_ = speed;
   feeback_method_ = feedback_method;
   is_pose_initialized_ = false;
   is_attitude_initialized_ = false;
   is_depth_initialized_ = false;
+
+  // TODO(bjoshi:) Find better way to do this.
+  motor_controller_ = std::make_unique<MotorControl>(VehicleType::BLUEROV2, 6);
+  motor_controller_->setMotorDirection(0, -1.0);
+  motor_controller_->setMotorDirection(0, -1.0);
+  motor_controller_->setMotorDirection(0, -1.0);
 }
 
 void MotionPrimitive::setAttitude(const sensor_msgs::Imu::ConstPtr& imu_msg) {
@@ -25,10 +40,16 @@ void MotionPrimitive::setAttitude(const sensor_msgs::Imu::ConstPtr& imu_msg) {
                    imu_msg->orientation.y,
                    imu_msg->orientation.z,
                    imu_msg->orientation.w);
+
   tf::Matrix3x3 m(q);
   double roll, pitch, yaw;
   m.getRPY(roll, pitch, yaw);
   current_attitude_ = Eigen::Vector3d(roll, pitch, yaw);
+
+  ROS_INFO_STREAM_THROTTLE(10,
+                           "Attitude RPY: " << roll * 180.0 / M_PI << "\t" << pitch * 180.0 / M_PI
+                                            << "\t" << yaw * 180.0 / M_PI);
+
   if (!is_attitude_initialized_) {
     // initial_attitude_ = current_attitude_;
     is_attitude_initialized_ = true;
@@ -78,7 +99,6 @@ void MotionPrimitive::executeStraightLine(const double duration,
                                           const double depth,
                                           const double yaw) {
   ros::Rate rate(10);
-  ros::Time start_time = ros::Time::now();
   int forward_speed = speed_;
   int lateral_speed = 0;
   int throttle_speed = (depth - current_depth_) / duration;
@@ -86,6 +106,7 @@ void MotionPrimitive::executeStraightLine(const double duration,
   int pitch_speed = (0.0 - current_attitude_[1] / M_PI);
   int yaw_speed = (yaw - current_attitude_[2]) / M_PI;
 
+  ros::Time start_time = ros::Time::now();
   while (ros::ok() && (ros::Time::now() - start_time).toSec() < duration) {
     std::vector<double> motor_intensities = motor_controller_->thrustToMotorIntensities(
         forward_speed, lateral_speed, throttle_speed, roll_speed, pitch_speed, yaw_speed);
@@ -144,9 +165,11 @@ bool Transect::executeAttitudeFeedback(int num_of_times) {
     }
   }
 
-  // Execute square
+  // Execute transect
   Eigen::Vector3d initial_attitude = current_attitude_;
   double initial_depth = current_depth_;
+
+  ROS_INFO_STREAM("!! Executing Trasect with Atittude Feedback for " << duration_ << " secs!!");
 
   executeStraightLine(duration_, initial_depth, initial_attitude[2]);
   return true;

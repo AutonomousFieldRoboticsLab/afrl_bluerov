@@ -2,7 +2,7 @@
 
 #include "MotorUtils.h"
 
-MotorControl::MotorControl(VehicleType vehicle_type, uint8_t num_motors)
+MotorControl::MotorControl(VehicleType vehicle_type, int num_motors)
     : vehicle_type_(vehicle_type), num_motors_(num_motors) {
   forward_factor_.resize(num_motors_);
   lateral_factor_.resize(num_motors_);
@@ -10,6 +10,7 @@ MotorControl::MotorControl(VehicleType vehicle_type, uint8_t num_motors)
   yaw_factor_.resize(num_motors_);
   roll_factor_.resize(num_motors_);
   pitch_factor_.resize(num_motors_);
+  directions_.resize(num_motors_);
 
   setup();
 };
@@ -36,12 +37,12 @@ void MotorControl::setup() {
       break;
   }
 
-  for (uint8_t i = 0; i < num_motors_; i++) {
+  for (int i = 0; i < num_motors_; i++) {
     setMotorDirection(i, 1.0);
   }
 }
 
-void MotorControl::addMotorRaw6Dof(uint8_t motor_num,
+void MotorControl::addMotorRaw6Dof(int motor_num,
                                    float forward_factor,
                                    float lateral_factor,
                                    float throttle_factor,
@@ -58,7 +59,7 @@ void MotorControl::addMotorRaw6Dof(uint8_t motor_num,
   }
 }
 
-void MotorControl::setMotorDirection(uint8_t motor_num, float direction) {
+void MotorControl::setMotorDirection(int motor_num, float direction) {
   if (motor_num >= 0 && motor_num < MAX_NUM_MOTORS) {
     directions_[motor_num] = direction;
   }

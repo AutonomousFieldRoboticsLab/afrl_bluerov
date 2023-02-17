@@ -15,24 +15,24 @@ class MotorControl {
 
   // Motor configuration
   int num_motors_;
-  std::vector<float> forward_factor_;
-  std::vector<float> lateral_factor_;
-  std::vector<float> throttle_factor_;
-  std::vector<float> yaw_factor_;
-  std::vector<float> roll_factor_;
-  std::vector<float> pitch_factor_;
+  std::vector<double> forward_factor_;
+  std::vector<double> lateral_factor_;
+  std::vector<double> throttle_factor_;
+  std::vector<double> yaw_factor_;
+  std::vector<double> roll_factor_;
+  std::vector<double> pitch_factor_;
 
-  std::vector<float> directions_;
+  std::vector<double> directions_;
 
   std::vector<int> motor_pwm_;
 
-  void setMotorDirection(int motor_num, float direction);
-  std::vector<double> thrustToMotorIntensities(const float forward,
-                                               const float lateral,
-                                               const float throttle,
-                                               const float yaw,
-                                               const float roll,
-                                               const float pitch);
+  int max_motor_pwm_;
+  int offset_pwm_;
+
+  void setMotorDirection(int motor_num, double direction);
+  std::vector<double> thrustToMotorIntensities(const std::vector<double>& thrust_vector);
+  std::vector<int> motorIntensitiesToPWM(const std::vector<double>& motor_intensities);
+  std::vector<int> getMotorPWM(const std::vector<double>& thrust_vector);
 
  private:
   void setup();

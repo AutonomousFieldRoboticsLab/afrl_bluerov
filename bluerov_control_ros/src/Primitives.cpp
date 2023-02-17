@@ -6,6 +6,8 @@
 #include <cmath>
 
 #include "MotorUtils.h"
+#include "Utils.h"
+
 MotionPrimitive::MotionPrimitive() : motor_controller_(nullptr) {
   speed_ = 1.0;
   feeback_method_ = FeedbackMethod::ATTITUDE_WITH_DEPTH;
@@ -31,8 +33,8 @@ MotionPrimitive::MotionPrimitive(float speed, FeedbackMethod feedback_method)
   // TODO(bjoshi:) Find better way to do this.
   motor_controller_ = std::make_unique<MotorControl>(VehicleType::BLUEROV2, 6);
   motor_controller_->setMotorDirection(0, -1.0);
-  motor_controller_->setMotorDirection(0, -1.0);
-  motor_controller_->setMotorDirection(0, -1.0);
+  motor_controller_->setMotorDirection(1, -1.0);
+  motor_controller_->setMotorDirection(2, -1.0);
 }
 
 void MotionPrimitive::setAttitude(const sensor_msgs::Imu::ConstPtr& imu_msg) {
@@ -46,9 +48,8 @@ void MotionPrimitive::setAttitude(const sensor_msgs::Imu::ConstPtr& imu_msg) {
   m.getRPY(roll, pitch, yaw);
   current_attitude_ = Eigen::Vector3d(roll, pitch, yaw);
 
-  ROS_INFO_STREAM_THROTTLE(10,
-                           "Attitude RPY: " << roll * 180.0 / M_PI << "\t" << pitch * 180.0 / M_PI
-                                            << "\t" << yaw * 180.0 / M_PI);
+  ROS_INFO_STREAM("Attitude RPY: " << roll * 180.0 / M_PI << "\t" << pitch * 180.0 / M_PI << "\t"
+                                   << yaw * 180.0 / M_PI);
 
   if (!is_attitude_initialized_) {
     // initial_attitude_ = current_attitude_;
@@ -96,23 +97,19 @@ bool MotionPrimitive::execute(int num_of_times) {
 }
 
 void MotionPrimitive::executeStraightLine(const double duration,
-                                          const double depth,
-                                          const double yaw) {
-  ros::Rate rate(10);
-  int forward_speed = speed_;
-  int lateral_speed = 0;
-  int throttle_speed = (depth - current_depth_) / duration;
-  int roll_speed = (0.0 - current_attitude_[0]) / M_PI;
-  int pitch_speed = (0.0 - current_attitude_[1] / M_PI);
-  int yaw_speed = (yaw - current_attitude_[2]) / M_PI;
+                                          const double target_depth,
+                                          const double target_yaw) {
+  double forward_speed = speed_;
+  double lateral_speed = 0;
+  double throttle_speed = (target_depth - current_depth_) / duration;
 
-  ros::Time start_time = ros::Time::now();
-  while (ros::ok() && (ros::Time::now() - start_time).toSec() < duration) {
-    std::vector<double> motor_intensities = motor_controller_->thrustToMotorIntensities(
-        forward_speed, lateral_speed, throttle_speed, roll_speed, pitch_speed, yaw_speed);
-    // motor_command_callback_(motor_intensities);
-    rate.sleep();
-  }
+  double roll_speed = utils::angleErrorRadians(0.0, current_attitude_[0]) / M_PI;
+  double pitch_speed = utils::angleErrorRadians(0.0, current_attitude_[1]) / M_PI;
+  double yaw_speed = utils::angleErrorRadians(target_yaw, current_attitude_[2]) / M_PI;
+
+  std::vector<int> motor_pwms = motor_controller_->getMotorPWM(
+      {forward_speed, lateral_speed, throttle_speed, roll_speed, pitch_speed, yaw_speed});
+  motor_command_callback_(motor_pwms);
 }
 
 void MotionPrimitive::executeGlobalAttitude(const Eigen::Vector3d& target_attitude) {
@@ -120,25 +117,17 @@ void MotionPrimitive::executeGlobalAttitude(const Eigen::Vector3d& target_attitu
   // TODO(bjoshi): Make sure that this is the correct way to do this
   // This might backfire if the target attitude is close to pi
 
-  tf::Matrix3x3 m;
-  m.setRPY(target_attitude[0], target_attitude[1], target_attitude[2]);
-  double roll, pitch, yaw;
-  m.getRPY(roll, pitch, yaw);
-
-  ros::Rate rate(10);
-  int forward_speed = 0;
-  int lateral_speed = 0;
-  int throttle_speed = 0;
-  int roll_speed = (roll - current_attitude_[0]) / M_PI;
-  int pitch_speed = (pitch - current_attitude_[1] / M_PI);
-  int yaw_speed = (yaw - current_attitude_[2]) / M_PI;
-
-  while (ros::ok() && (target_attitude - current_attitude_).norm() > 20.0 * M_PI / 180.0) {
-    std::vector<double> motor_intensities = motor_controller_->thrustToMotorIntensities(
-        forward_speed, lateral_speed, throttle_speed, roll_speed, pitch_speed, yaw_speed);
-    // motor_command_callback_(motor_intensities);
-    rate.sleep();
-  }
+  double forward_speed = 0;
+  double lateral_speed = 0;
+  double throttle_speed = 0;
+  Eigen::Vector3d angular_speed = utils::getAngleError(target_attitude, current_attitude_) / M_PI;
+  std::vector<int> motor_pwms = motor_controller_->getMotorPWM({forward_speed,
+                                                                lateral_speed,
+                                                                throttle_speed,
+                                                                angular_speed[0],
+                                                                angular_speed[1],
+                                                                angular_speed[2]});
+  motor_command_callback_(motor_pwms);
 }
 
 Transect::Transect() : MotionPrimitive(), length_(5.0), duration_(5.0) {}

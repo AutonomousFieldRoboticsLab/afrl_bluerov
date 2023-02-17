@@ -1,6 +1,7 @@
 #include "MotorControl.h"
 
 #include "MotorUtils.h"
+#include "Utils.h"
 
 MotorControl::MotorControl(VehicleType vehicle_type, int num_motors)
     : vehicle_type_(vehicle_type), num_motors_(num_motors) {
@@ -13,6 +14,9 @@ MotorControl::MotorControl(VehicleType vehicle_type, int num_motors)
   directions_.resize(num_motors_);
 
   setup();
+
+  max_motor_pwm_ = 200;
+  offset_pwm_ = 20;
 };
 
 void MotorControl::setup() {
@@ -59,17 +63,47 @@ void MotorControl::addMotorRaw6Dof(int motor_num,
   }
 }
 
-void MotorControl::setMotorDirection(int motor_num, float direction) {
+void MotorControl::setMotorDirection(int motor_num, double direction) {
   if (motor_num >= 0 && motor_num < MAX_NUM_MOTORS) {
     directions_[motor_num] = direction;
   }
 }
 
-std::vector<double> MotorControl::thrustToMotorIntensities(const float forward,
-                                                           const float lateral,
-                                                           const float throttle,
-                                                           const float yaw,
-                                                           const float roll,
-                                                           const float pitch) {
-  return {};
+std::vector<double> MotorControl::thrustToMotorIntensities(
+    const std::vector<double>& thrust_vector) {
+  // thrust vector is : x, y, z, roll, pitch, yaw
+  std::vector<double> motor_intensities(num_motors_, 0.0);
+
+  for (int i = 0; i < num_motors_; ++i) {
+    motor_intensities[i] =
+        thrust_vector[0] * forward_factor_[i] + thrust_vector[1] * lateral_factor_[i] +
+        thrust_vector[2] * throttle_factor_[i] + thrust_vector[3] * roll_factor_[i] +
+        thrust_vector[4] * pitch_factor_[i] + thrust_vector[5] * yaw_factor_[i];
+  }
+
+  utils::normalizeVector(motor_intensities);
+
+  for (int i = 0; i < num_motors_; ++i) {
+    assert(motor_intensities[i] <= 1.0);
+    motor_intensities[i] = motor_intensities[i] * directions_[i];
+  }
+
+  return motor_intensities;
+}
+
+std::vector<int> MotorControl::motorIntensitiesToPWM(const std::vector<double>& motor_intensities) {
+  std::vector<int> motor_pwms(num_motors_, 1500);
+  int offset = offset_pwm_;
+  for (int i = 0; i < num_motors_; ++i) {
+    if (motor_intensities[i] < 0) offset = 0 - offset_pwm_;
+    motor_pwms[i] = motor_pwms[i] +
+                    static_cast<int>(motor_intensities[i] * static_cast<double>(max_motor_pwm_)) +
+                    offset;
+  }
+  return motor_pwms;
+}
+
+std::vector<int> MotorControl::getMotorPWM(const std::vector<double>& thrust_vector) {
+  std::vector<double> motor_intensities = thrustToMotorIntensities(thrust_vector);
+  return motorIntensitiesToPWM(motor_intensities);
 }

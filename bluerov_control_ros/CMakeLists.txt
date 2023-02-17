@@ -47,6 +47,8 @@ target_link_libraries(bluerov_primitive_node bluerov_control ${catkin_LIBRARIES}
 add_executable(bluerov_transect_node src/bluerov_transect_node.cpp)
 target_link_libraries(bluerov_transect_node bluerov_control ${catkin_LIBRARIES})
 
+add_executable(test_node src/test_absolute_orientation.cpp)
+target_link_libraries(test_node bluerov_control ${catkin_LIBRARIES})
 #############
 ## Install ##
 #############

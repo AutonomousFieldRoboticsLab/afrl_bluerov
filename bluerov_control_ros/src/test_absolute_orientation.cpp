@@ -125,13 +125,15 @@ int main(int argc, char* argv[]) {
 
   // Execute transect
   Eigen::Vector3d initial_attitude = transect->current_attitude_;
+
   double initial_depth = transect->current_depth_;
+  Eigen::Vector3d target_attitude =
+      transect->current_attitude_ + Eigen::Vector3d(0.0, 0.0, M_PI_2 / 2.0);
 
-  ROS_INFO_STREAM("!! Executing Trasect with Atittude Feedback for " << duration << " secs!!");
-  ros::Time start_time = ros::Time::now();
-
-  while (ros::ok() && (ros::Time::now() - start_time).toSec() < duration) {
-    transect->executeStraightLine(duration, initial_depth, initial_attitude[2]);
+  std::cout << target_attitude << std::endl;
+  while (ros::ok() &&
+         (transect->current_attitude_ - target_attitude).norm() > 10.0 / 180.0 * M_PI) {
+    transect->executeGlobalAttitude(target_attitude);
     ros::spinOnce();
   }
 

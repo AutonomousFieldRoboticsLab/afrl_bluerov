@@ -41,3 +41,4 @@ Eigen::Vector3d utils::getAngleError(const Eigen::Vector3d& target_rpy,
 
   return Eigen::Vector3d(roll_error, pitch_error, yaw_error);
 }
+

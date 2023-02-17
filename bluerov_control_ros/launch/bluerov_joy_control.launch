@@ -4,7 +4,7 @@
 		<param name="autorepeat_rate" value="5" /> <!-- Minimal update rate, Hz -->
 	</node>
 
-	<node pkg="bluerov_control" type="bluerov_teleop.py" name="bluerov_teleop" required="True" output="screen">
-		<rosparam command="load" file="$(find bluerov_control)/config/f710_joy.yaml" />
+	<node pkg="bluerov_control_ros" type="bluerov_teleop.py" name="bluerov_teleop" required="True" output="screen">
+		<rosparam command="load" file="$(find bluerov_control_ros)/config/f710_joy.yaml" />
 	</node>
 </launch>

@@ -85,6 +85,11 @@ class MotionPrimitive {
   bool execute(int num_of_runs = 1);
   void executeStraightLine(const double duration, const double depth, const double yaw);
   void executeGlobalAttitude(const Eigen::Vector3d& target_attitude);
+
+  std::function<void(std::vector<int>&)> motor_command_callback_;
+  inline void setMotorCommandCallback(const std::function<void(std::vector<int>&)> func) {
+    motor_command_callback_ = func;
+  }
 };
 
 class Transect : public MotionPrimitive {

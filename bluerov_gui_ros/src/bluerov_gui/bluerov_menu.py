@@ -91,7 +91,7 @@ class BlueROVMenu(GenericMenu):
             "roslaunch",
             "bluerov_control_ros",
             "bluerov_square.launch",
-            f"duration:={self.square_time}"])
+            "duration:={}".format(self.square_time)])
 
 
     def action_square_svin(self):
@@ -107,8 +107,8 @@ class BlueROVMenu(GenericMenu):
             "roslaunch",
             "bluerov_control_ros",
             "bluerov_lawnmower.launch",
-            f"long_strip_duration:={self.lawnmower_large_time}",
-            f"short_strip_duration:={self.lawnmower_small_time}"])
+            "long_strip_duration:={}".format(self.lawnmower_large_time),
+            "short_strip_duration:={}".format(self.lawnmower_small_time)])
 
 
     def action_lawnmower_svin(self):
@@ -123,7 +123,7 @@ class BlueROVMenu(GenericMenu):
             "roslaunch",
             "bluerov_control_ros",
             "bluerov_transect.launch",
-            f"duration:={self.transect_time}"])
+            "duration:={}".format(self.transect_time)])
 
 
     def action_transect_svin(self):
@@ -166,8 +166,8 @@ class BlueROVMenu(GenericMenu):
         menu = {
             (0, 'Light'): {
                 (0, '<<'): '__back__',
-                (1, f'Inc +1 [{self.light}]'): lambda: self.action_change_light(self.light_step),
-                (2, f'Dec -1 [{self.light}]'): lambda: self.action_change_light(-self.light_step),
+                (1, 'Inc +1 [{}]'.format(self.light)): lambda: self.action_change_light(self.light_step),
+                (2, 'Dec -1 [{}]'.format(self.light)): lambda: self.action_change_light(-self.light_step),
                 (3, f'Reset'): self.action_reset_light,
             },
 
@@ -175,8 +175,8 @@ class BlueROVMenu(GenericMenu):
                 (0, '<<'): '__back__',
                 (1, 'Timed'): {
                     (0, '<<'): '__back__',
-                    (1, f'Inc +{self.time_step}s [{self.square_time}]'): lambda: self.action_change_square_time(self.time_step),
-                    (2, f'Dec -{self.time_step}s [{self.square_time}]'): lambda: self.action_change_square_time(-self.time_step),
+                    (1, 'Inc +{}s [{}]'.format(self.time_step, self.square_time)): lambda: self.action_change_square_time(self.time_step),
+                    (2, 'Dec -{}s [{}]'.format(self.time_step, self.square_time)): lambda: self.action_change_square_time(-self.time_step),
                     (3, 'Start'): self.action_transect_timed,
                 },
                 (2, 'SVIN'): self.action_square_svin,
@@ -187,16 +187,16 @@ class BlueROVMenu(GenericMenu):
                 (1, 'Timed'): {
                     (0, '<<'): '__back__',
 
-                    (1, f'Adjust Long Strip Time [{self.lawnmower_large_time}]'): {
+                    (1, 'Adjust Long Strip Time [{}]'.format(self.lawnmower_large_time)): {
                         (0, '<<'): '__back__',
-                        (1, f'Inc +{self.time_step}s [{self.lawnmower_large_time}]'): lambda: self.action_change_lawnmower_large_time(self.time_step),
-                        (2, f'Dec -{self.time_step}s [curr: {self.lawnmower_large_time}]'): lambda: self.action_change_lawnmower_large_time(-self.time_step),
+                        (1, 'Inc +{}s [{}]'.format(self.time_step, self.lawnmower_large_time)): lambda: self.action_change_lawnmower_large_time(self.time_step),
+                        (2, 'Dec -{}s [{}]'.format(self.time_step, self.lawnmower_large_time)): lambda: self.action_change_lawnmower_large_time(-self.time_step),
                     },
 
-                    (2, f'Adjust Short Strip Time [{self.lawnmower_small_time}]'): {
+                    (2, 'Adjust Short Strip Time [{}]'.format(self.lawnmower_small_time)): {
                         (0, '<<'): '__back__',
-                        (1, f'Inc +{self.time_step}s [{self.lawnmower_small_time}]'): lambda: self.action_change_lawnmower_small_time(self.time_step),
-                        (2, f'Dec -{self.time_step}s [{self.lawnmower_small_time}]'): lambda: self.action_change_lawnmower_small_time(-self.time_step),
+                        (1, 'Inc +{}s [{}]'.format(self.time_step, self.lawnmower_small_time)): lambda: self.action_change_lawnmower_small_time(self.time_step),
+                        (2, 'Dec -{}s [{}]'.format(self.time_step, self.lawnmower_small_time)): lambda: self.action_change_lawnmower_small_time(-self.time_step),
                     },
 
                     (3, 'Start'): self.action_lawnmower_timed,
@@ -209,8 +209,8 @@ class BlueROVMenu(GenericMenu):
                 (0, '<<'): '__back__',
                 (1, 'Timed'): {
                     (0, '<<'): '__back__',
-                    (1, 'Inc +{self.time_step}s [{self.transect_time}]'): lambda: self.action_change_transect_time(self.time_step),
-                    (2, 'Dec -{self.time_step}s [{self.transect_time}]'): lambda: self.action_change_transect_time(-self.time_step),
+                    (1, 'Inc +{}s [{}]'.format(self.time_step, self.transect_time)): lambda: self.action_change_transect_time(self.time_step),
+                    (2, 'Dec -{}s [{}]'.format(self.time_step, self.transect_time)): lambda: self.action_change_transect_time(-self.time_step),
                     (3, 'Start'): self.action_transect_timed,
                 },
                 (2, 'SVIN'): self.action_transect_svin,

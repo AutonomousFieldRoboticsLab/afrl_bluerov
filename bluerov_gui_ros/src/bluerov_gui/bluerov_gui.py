@@ -660,6 +660,7 @@ class StereoRigGuiProgram(QtWidgets.QDialog):
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
         self.app = app
         self.current_image = None
+        self.log_textbox.setEnabled(False)
 
         # Connect "add" button with a custom function (addInputTextToListbox)
         # self.addBtn.clicked.connect(self.addInputTextToListbox)
@@ -788,7 +789,8 @@ def starting_up(argv):
     prog = StereoRigGuiProgram(app, launch_bag_file,
                                camera_name, camera_node,
                                )
-    prog.show()
+    # prog.show()
+    prog.showFullScreen()
 
     # Handling of application quit.
     rospy.on_shutdown(shutdown_handler)

@@ -1,0 +1,23 @@
+<launch>
+
+    <arg name="markerSize"       default="0.036"/>    <!-- in m -->
+    <arg name="image_topic"      default="/bluerov/image_raw"/>
+    <arg name="cam_info_topic"   default="/bluerov/camera_info"/>
+    <arg name="image_rectified"  default="false"/>
+    <arg name="cam_frame"        default="camera"/>
+    <arg name="ref_frame"        default="bluerov"/>  <!-- leave empty and the pose will be published wrt param parent_name -->
+
+
+    <node pkg="aruco_ros" type="marker_publisher" name="aruco_marker_publisher" respawn="true">
+        <remap from="/camera_info" to="$(arg cam_info_topic)" />
+        <remap from="/image" to="$(arg image_topic)" />
+        <param name="image_is_rectified" value="$(arg image_rectified)"/>
+        <param name="marker_size"        value="$(arg markerSize)"/>
+        <param name="reference_frame"    value="$(arg ref_frame)"/>   <!-- frame in which the marker pose will be refered -->
+        <param name="camera_frame"       value="$(arg cam_frame)"/>
+    </node>
+
+
+    <node pkg="tf" type="static_transform_publisher" name="tf_broadcaster" args="0 0 0 0 0 0 bluerov camera 100" />
+
+</launch>

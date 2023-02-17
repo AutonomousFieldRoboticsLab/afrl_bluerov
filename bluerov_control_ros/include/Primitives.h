@@ -7,6 +7,8 @@
 #include <Eigen/Core>
 #include <string>
 
+#include "MotorControl.h"
+
 enum PrimitiveType {
   TRASECT = 0,       // Move in a straight line
   SQUARE = 1,        // Perform a square
@@ -58,16 +60,30 @@ class MotionPrimitive {
   MotionPrimitive(float speed, FeedbackMethod feedback_method);
 
   virtual ~MotionPrimitive() = default;
-  virtual bool execute() = 0;
+  virtual bool executeAttitudeFeedback(int num_of_runs) = 0;
+  virtual bool executePoseFeedback(int num_of_runs) = 0;
+
+  std::unique_ptr<MotorControl> motor_controller_;
+
+  Eigen::Vector3d current_attitude_;  // Attitude of the vehicle
+  double current_depth_;              // Depth of the vehicle
+  Eigen::Vector3d current_position_;  // Position of the vehicle
+
+  // Eigen::Vector3d initial_attitude_;  // Attitude of the vehicle
+  // double initial_depth_;              // Depth of the vehicle
+  // Eigen::Vector3d initial_position_;  // Position of the vehicle
+
+  bool is_attitude_initialized_;  // Flag to check if the primitive has been initialized
+  bool is_depth_initialized_;     // Flag to check if the primitive has been initialized
+  bool is_pose_initialized_;      // Flag to check if the primitive has been initialized
 
   void setAttitude(const sensor_msgs::Imu::ConstPtr& imu_msg);
-  void setDepth(const float depth);
-  // void setAttitudeAndDepth(const Eigen::Vector3f& attitude, const float depth);
+  void setDepth(const double depth);
   void setPose(const geometry_msgs::PoseStamped::ConstPtr& pose_msg);
 
-  Eigen::Vector3f attitude_;  // Attitude of the vehicle
-  float depth_;               // Depth of the vehicle
-  Eigen::Vector3f position_;  // Position of the vehicle
+  bool execute(int num_of_runs = 1);
+  void executeStraightLine(const double duration, const double depth, const double yaw);
+  void executeGlobalAttitude(const Eigen::Vector3d& target_attitude);
 };
 
 class Trasect : public MotionPrimitive {
@@ -86,7 +102,8 @@ class Trasect : public MotionPrimitive {
   float length_;    // Length of the trasect
   float duration_;  // duration to complete trasect
 
-  bool execute() override;
+  bool executeAttitudeFeedback(int num_of_times = 1) override;
+  bool executePoseFeedback(int num_of_times = 1) override;
 };
 
 class Square : public MotionPrimitive {
@@ -102,12 +119,13 @@ class Square : public MotionPrimitive {
 
   virtual ~Square();
 
-  bool execute() override;
-
   // TODO(bjoshi:) Need to change them to private and add getters and setters
 
   float length_;    // Side length of the square
   float duration_;  // duration to complete side of square
+
+  bool executeAttitudeFeedback(int num_of_times = 1) override;
+  bool executePoseFeedback(int num_of_times = 1) override;
 };
 
 class LawnMower : public MotionPrimitive {
@@ -128,12 +146,13 @@ class LawnMower : public MotionPrimitive {
 
   virtual ~LawnMower();
 
-  bool execute() override;
-
   // TODO(bjoshi:) Need to change them to private and add getters and setters
 
   float long_strip_duration_;   // duration to complete side the longer side
   float short_strip_duration_;  // duration to complete side the shorter side
   float strip_length_;          // Length of the longer side
   float strip_width_;           // Length of the shorter side
+
+  bool executeAttitudeFeedback(int num_of_times = 1) override;
+  bool executePoseFeedback(int num_times = 1) override;
 };

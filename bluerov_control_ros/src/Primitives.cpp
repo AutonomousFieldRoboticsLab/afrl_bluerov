@@ -1,27 +1,123 @@
 #include "Primitives.h"
 
+#include <ros/ros.h>
+#include <tf/LinearMath/Matrix3x3.h>
+
+#include <cmath>
 MotionPrimitive::MotionPrimitive() {
   speed_ = 1.0;
   feeback_method_ = FeedbackMethod::ATTITUDE_WITH_DEPTH;
+  is_pose_initialized_ = false;
+  is_attitude_initialized_ = false;
+  is_depth_initialized_ = false;
 }
 
 MotionPrimitive::MotionPrimitive(float speed, FeedbackMethod feedback_method) {
   speed_ = speed;
   feeback_method_ = feedback_method;
+  is_pose_initialized_ = false;
+  is_attitude_initialized_ = false;
+  is_depth_initialized_ = false;
 }
 
 void MotionPrimitive::setAttitude(const sensor_msgs::Imu::ConstPtr& imu_msg) {
-  // attitude_ = attitude;
+  tf::Quaternion q(imu_msg->orientation.x,
+                   imu_msg->orientation.y,
+                   imu_msg->orientation.z,
+                   imu_msg->orientation.w);
+  tf::Matrix3x3 m(q);
+  double roll, pitch, yaw;
+  m.getRPY(roll, pitch, yaw);
+  current_attitude_ = Eigen::Vector3d(roll, pitch, yaw);
+  if (!is_attitude_initialized_) {
+    // initial_attitude_ = current_attitude_;
+    is_attitude_initialized_ = true;
+  }
 }
-void MotionPrimitive::setDepth(const float depth) { depth_ = depth; }
-// void MotionPrimitive::setAttitudeAndDepth(const Eigen::Vector3f& attitude, const float depth) {
-//   attitude_ = attitude;
-//   depth_ = depth;
-// }
+
+void MotionPrimitive::setDepth(const double depth) {
+  current_depth_ = depth;
+  if (!is_depth_initialized_) {
+    // initial_depth_ = current_depth_;
+    is_depth_initialized_ = true;
+  }
+}
 
 void MotionPrimitive::setPose(const geometry_msgs::PoseStamped::ConstPtr& pose_msg) {
-  // attitude_ = attitude;
-  // position_ = position;
+  current_position_ = Eigen::Vector3d(
+      pose_msg->pose.position.x, pose_msg->pose.position.y, pose_msg->pose.position.z);
+
+  tf::Quaternion q(pose_msg->pose.orientation.x,
+                   pose_msg->pose.orientation.y,
+                   pose_msg->pose.orientation.z,
+                   pose_msg->pose.orientation.w);
+  tf::Matrix3x3 m(q);
+  double roll, pitch, yaw;
+  m.getRPY(roll, pitch, yaw);
+  current_attitude_ = Eigen::Vector3d(roll, pitch, yaw);
+
+  if (!is_pose_initialized_) {
+    // initial_position_ = current_position_;
+    // initial_attitude_ = current_attitude_;
+    is_pose_initialized_ = true;
+  }
+}
+
+bool MotionPrimitive::execute(int num_of_times) {
+  if (feeback_method_ == FeedbackMethod::ATTITUDE ||
+      feeback_method_ == FeedbackMethod::ATTITUDE_WITH_DEPTH) {
+    return executeAttitudeFeedback(num_of_times);
+  } else if (feeback_method_ == FeedbackMethod::POSE) {
+    return executePoseFeedback(num_of_times);
+  } else {
+    return false;
+  }
+}
+
+void MotionPrimitive::executeStraightLine(const double duration,
+                                          const double depth,
+                                          const double yaw) {
+  ros::Rate rate(10);
+  ros::Time start_time = ros::Time::now();
+  int forward_speed = speed_;
+  int lateral_speed = 0;
+  int throttle_speed = (depth - current_depth_) / duration;
+  int roll_speed = (0.0 - current_attitude_[0]) / M_PI;
+  int pitch_speed = (0.0 - current_attitude_[1] / M_PI);
+  int yaw_speed = (yaw - current_attitude_[2]) / M_PI;
+
+  while (ros::ok() && (ros::Time::now() - start_time).toSec() < duration) {
+    std::vector<float> motor_intensities = motor_controller_->thrustToMotorIntensities(
+        forward_speed, lateral_speed, throttle_speed, roll_speed, pitch_speed, yaw_speed);
+    motor_command_callback_(motor_intensities);
+    rate.sleep();
+  }
+}
+
+void MotionPrimitive::executeGlobalAttitude(const Eigen::Vector3d& target_attitude) {
+  // Making sure that the attitude is between -pi and pi
+  // TODO(bjoshi): Make sure that this is the correct way to do this
+  // This might backfire if the target attitude is close to pi
+
+  tf::Matrix3x3 m;
+  m.setRPY(target_attitude[0], target_attitude[1], target_attitude[2]);
+  double roll, pitch, yaw;
+  m.getRPY(roll, pitch, yaw);
+
+  ros::Rate rate(10);
+  int forward_speed = 0;
+  int lateral_speed = 0;
+  int throttle_speed = 0;
+  int roll_speed = (roll - current_attitude_[0]) / M_PI;
+  int pitch_speed = (pitch - current_attitude_[1] / M_PI);
+  int yaw_speed = (yaw - current_attitude_[2]) / M_PI;
+
+  while (ros::ok() && (target_attitude - current_attitude_).norm() > 20.0 * M_PI / 180.0) {
+    std::vector<float> motor_intensities = motor_controller_->thrustToMotorIntensities(
+        forward_speed, lateral_speed, throttle_speed, roll_speed, pitch_speed, yaw_speed);
+    motor_command_callback_(motor_intensities);
+    rate.sleep();
+  }
 }
 
 Trasect::Trasect() : MotionPrimitive(), length_(5.0), duration_(5.0) {}
@@ -34,7 +130,29 @@ Trasect::Trasect(float length, float duration, float speed, FeedbackMethod feedb
 
 Trasect::~Trasect() {}
 
-bool Trasect::execute() { return false; }
+bool Trasect::executeAttitudeFeedback(int num_of_times) {
+  ros::Time start_time = ros::Time::now();
+  ros::Rate rate(10);
+
+  // Wait for attitude and depth to be initialized for 10 secs
+  while (ros::ok() && (!is_attitude_initialized_ || !is_depth_initialized_)) {
+    ros::spinOnce();
+    rate.sleep();
+    if ((ros::Time::now() - start_time).toSec() > 10.0) {
+      ROS_ERROR("Attitude or depth not initialized");
+      return false;
+    }
+  }
+
+  // Execute square
+  Eigen::Vector3d initial_attitude = current_attitude_;
+  double initial_depth = current_depth_;
+
+  executeStraightLine(duration_, initial_depth, initial_attitude[2]);
+  return true;
+}
+
+bool Trasect::executePoseFeedback(int num_times) { return false; };
 
 Square::Square() : MotionPrimitive(), length_(5.0), duration_(5.0) {}
 
@@ -46,7 +164,37 @@ Square::Square(float length, float duration, float speed, FeedbackMethod feedbac
 
 Square::~Square() {}
 
-bool Square::execute() { return false; }
+bool Square::executeAttitudeFeedback(int num_of_times) {
+  ros::Time start_time = ros::Time::now();
+  ros::Rate rate(10);
+
+  // Wait for attitude and depth to be initialized for 10 secs
+  while (ros::ok() && (!is_attitude_initialized_ || !is_depth_initialized_)) {
+    ros::spinOnce();
+    rate.sleep();
+    if ((ros::Time::now() - start_time).toSec() > 10.0) {
+      ROS_ERROR("Attitude or depth not initialized");
+      return false;
+    }
+  }
+
+  // Execute square
+  Eigen::Vector3d initial_attitude = current_attitude_;
+  double initial_depth = current_depth_;
+
+  executeStraightLine(duration_, initial_depth, initial_attitude[2]);
+  executeGlobalAttitude(initial_attitude + Eigen::Vector3d(0.0, 0.0, M_PI_2));
+  executeStraightLine(duration_, initial_depth, initial_attitude[2] + M_PI_2);
+  executeGlobalAttitude(initial_attitude + Eigen::Vector3d(0.0, 0.0, M_PI));
+  executeStraightLine(duration_, initial_depth, initial_attitude[2] + M_PI);
+  executeGlobalAttitude(initial_attitude + Eigen::Vector3d(0.0, 0.0, 3.0 * M_PI_2));
+  executeStraightLine(duration_, initial_depth, initial_attitude[2] + 3.0 * M_PI_2);
+  executeGlobalAttitude(initial_attitude);
+
+  return true;
+}
+
+bool Square::executePoseFeedback(int num_times) { return false; };
 
 LawnMower::LawnMower()
     : MotionPrimitive(),
@@ -79,4 +227,5 @@ LawnMower::LawnMower(float long_strip_duration,
 
 LawnMower::~LawnMower() {}
 
-bool LawnMower::execute() { return false; }
+bool LawnMower::executePoseFeedback(int num_times) { return false; };
+bool LawnMower::executeAttitudeFeedback(int num_times) { return false; };

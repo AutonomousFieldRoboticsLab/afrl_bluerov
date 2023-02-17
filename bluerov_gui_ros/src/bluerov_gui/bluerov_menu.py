@@ -51,64 +51,169 @@ class BlueROVMenu(GenericMenu):
     def handle_cam_msg(self, msg):
         pass
 
-    def action_svin_start(self):
-        print("SVIN-start action not implemented yet.")
+    def action_change_light(self, change_amount):
+        self.light = max(
+            self.light_min,
+            min(self.light_max,
+                self.light + change_amount))
 
-    def action_svin_stop(self):
-        print("SVIN-stop action not implemented yet.")
+        # TODO: Make the changes effective.
+
+
+    def action_reset_light(self):
+        self.light = self.light_default
+
+        # TODO: Make the changes effective.
+
+
+    def action_change_square_time(self, change_amount):
+        self.square_time += change_amount
+
+    def action_change_lawnmower_large_time(self, change_amount):
+        self.lawnmower_large_time += change_amount
+
+    def action_change_lawnmower_small_time(self, change_amount):
+        self.lawnmower_small_time += change_amount
+
+    def action_change_transect_time(self, change_amount):
+        self.transect_time += change_amount
+
+
+    action_process = None
+
 
     def action_square_timed(self):
-        print("Square-timed action not implmented yet.")
+        print("Launching lawnmower action ...")
+        if self.action_process:
+            self.action_process.kill()
+
+        self.action_process = subprocess.Popen([
+            "roslaunch",
+            "bluerov_control_ros",
+            "bluerov_square.launch",
+            f"duration:={self.square_time}"])
+
 
     def action_square_svin(self):
         print("Square-svin action not implemented yet.")
 
+
     def action_lawnmower_timed(self):
-        print("Lawnmower-timed action not implmented yet.")
+        print("Launching lawnmower action ...")
+        if self.action_process:
+            self.action_process.kill()
+
+        self.action_process = subprocess.Popen([
+            "roslaunch",
+            "bluerov_control_ros",
+            "bluerov_lawnmower.launch",
+            f"long_strip_duration:={self.lawnmower_large_time}",
+            f"short_strip_duration:={self.lawnmower_small_time}"])
+
 
     def action_lawnmower_svin(self):
         print("Lawnmower-svin action not implemented yet.")
 
-    def action_record_start(self):
-        print("Record-start action not implemented yet.")
 
-    def action_record_stop(self):
-        print("Record-stop action not implemented yet.")
+    def action_transect_timed(self):
+        if self.action_process:
+            self.action_process.kill()
+
+        self.action_process = subprocess.Popen([
+            "roslaunch",
+            "bluerov_control_ros",
+            "bluerov_transect.launch",
+            f"duration:={self.transect_time}"])
+
+
+    def action_transect_svin(self):
+        print("Transect-svin action not implemented yet.")
+
+
+
+    # small_trajec_time = 100
+    # large_trajec_time = 290
+    # medium_line_time = 70
+
+    # small_lawnmower_time = 135
+    # small_ret_lawnmower_time = small_lawnmower_time + 90
+    # medium_lawnmower_time = 285
+    # large_lawnmower_time = 440
+
+
+    light_default = 1
+    light_min = 0
+    light_max = 0
+    light_step = 1
+    light = light_default
+
+    time_step = 5
+
+    square_time_default = 30
+    square_time = square_time_default
+
+    lawnmower_small_time_default = 10
+    lawnmower_small_time = lawnmower_small_time_default
+
+    lawnmower_large_time_default = 30
+    lawnmower_large_time = lawnmower_large_time_default
+
+    transect_time_default = 30
+    transect_time = transect_time_default
 
 
     def getMenu(self):
-        small_trajec_time = 100
-        large_trajec_time = 290
-        medium_line_time = 70
-
-        small_lawnmower_time = 135
-        small_ret_lawnmower_time = small_lawnmower_time + 90
-        medium_lawnmower_time = 285
-        large_lawnmower_time = 440
-
         menu = {
-            (0, 'SVIN'): {
+            (0, 'Light'): {
                 (0, '<<'): '__back__',
-                (1, 'Start'): self.action_svin_start,
-                (2, 'Stop'): self.action_svin_stop,
+                (1, f'Inc +1 [{self.light}]'): lambda: self.action_change_light(self.light_step),
+                (2, f'Dec -1 [{self.light}]'): lambda: self.action_change_light(-self.light_step),
+                (3, f'Reset'): self.action_reset_light,
             },
 
             (1, 'Square'): {
                 (0, '<<'): '__back__',
-                (1, 'Timed'): self.action_square_timed,
+                (1, 'Timed'): {
+                    (0, '<<'): '__back__',
+                    (1, f'Inc +{self.time_step}s [{self.square_time}]'): lambda: self.action_change_square_time(self.time_step),
+                    (2, f'Dec -{self.time_step}s [{self.square_time}]'): lambda: self.action_change_square_time(-self.time_step),
+                    (3, 'Start'): self.action_transect_timed,
+                },
                 (2, 'SVIN'): self.action_square_svin,
             },
 
             (2, 'Lawnmower'): {
                 (0, '<<'): '__back__',
-                (1, 'Timed'): self.action_lawnmower_timed,
+                (1, 'Timed'): {
+                    (0, '<<'): '__back__',
+
+                    (1, f'Adjust Long Strip Time [{self.lawnmower_large_time}]'): {
+                        (0, '<<'): '__back__',
+                        (1, f'Inc +{self.time_step}s [{self.lawnmower_large_time}]'): lambda: self.action_change_lawnmower_large_time(self.time_step),
+                        (2, f'Dec -{self.time_step}s [curr: {self.lawnmower_large_time}]'): lambda: self.action_change_lawnmower_large_time(-self.time_step),
+                    },
+
+                    (2, f'Adjust Short Strip Time [{self.lawnmower_small_time}]'): {
+                        (0, '<<'): '__back__',
+                        (1, f'Inc +{self.time_step}s [{self.lawnmower_small_time}]'): lambda: self.action_change_lawnmower_small_time(self.time_step),
+                        (2, f'Dec -{self.time_step}s [{self.lawnmower_small_time}]'): lambda: self.action_change_lawnmower_small_time(-self.time_step),
+                    },
+
+                    (3, 'Start'): self.action_lawnmower_timed,
+                },
+
                 (1, 'SVIN'): self.action_lawnmower_svin,
             },
 
-            (3, 'Record'): {
+            (3, 'Transect'): {
                 (0, '<<'): '__back__',
-                (1, 'Start'): self.action_record_start,
-                (2, 'Stop'): self.action_record_stop,
+                (1, 'Timed'): {
+                    (0, '<<'): '__back__',
+                    (1, 'Inc +{self.time_step}s [{self.transect_time}]'): lambda: self.action_change_transect_time(self.time_step),
+                    (2, 'Dec -{self.time_step}s [{self.transect_time}]'): lambda: self.action_change_transect_time(-self.time_step),
+                    (3, 'Start'): self.action_transect_timed,
+                },
+                (2, 'SVIN'): self.action_transect_svin,
             },
         }
 

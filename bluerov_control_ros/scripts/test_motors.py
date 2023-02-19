@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from mavros_msgs.msg import OverrideRCIn
+from mavros_msgs.srv import CommandBool
+
 import rospy
 import argparse
 
@@ -21,6 +23,13 @@ def get_defualt_rc():
         rc.channels[i] = default_pwm
     return rc
 
+def arm(state):
+    rospy.wait_for_service("/mavros/cmd/arming")
+    try:
+        armService = rospy.ServiceProxy("/mavros/cmd/arming", CommandBool)
+        armService(state)
+    except rospy.ServiceException as e:
+        rospy.loginfo("Service arm call failed: %s" % e)
 
 if __name__ == '__main__':
 
@@ -31,6 +40,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--motors')      # option that takes a value
     args = parser.parse_args()
 
+    arm(True)
     rospy.init_node('test_motors')
     pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 

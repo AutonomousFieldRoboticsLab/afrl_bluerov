@@ -2,6 +2,7 @@
 
 from mavros_msgs.msg import OverrideRCIn
 import rospy
+import argparse
 
 default_pwm = 1500
 
@@ -23,13 +24,22 @@ def get_defualt_rc():
 
 if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser(
+                    prog = 'TestMotors',
+                    description = 'Test each motor direction')
+    
+    parser.add_argument('-m', '--motors')      # option that takes a value
+    args = parser.parse_args()
+
     rospy.init_node('test_motors')
     pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 
     rc = get_defualt_rc()
-
-    rospy.loginfo("Publishing 1350 to Channel 0")
-    rc.channels[0] = 1450
+    
+    print("Testing motor direction for motor" , args.motors)      
+    rospy.loginfo("Publishing 1600 to Channel 0")
+    motor_num = int(args.motors)
+    rc.channels[motor_num] = 1600
 
     print(rc)
 

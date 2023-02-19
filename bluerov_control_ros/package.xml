@@ -16,6 +16,8 @@
   <depend>sensor_msgs</depend>
   <depend>mavros</depend>
   <depend>geometry_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf</depend>
 
   <exec_depend>roslaunch</exec_depend>
   <exec_depend>rospy</exec_depend>

@@ -3,6 +3,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Quaternion.h>
 #include <sensor_msgs/Imu.h>
+#include <tf/transform_listener.h>
 
 #include <Eigen/Core>
 #include <string>
@@ -85,6 +86,8 @@ class MotionPrimitive {
   bool execute(int num_of_runs = 1);
   void executeStraightLine(const double duration, const double depth, const double yaw);
   void executeGlobalAttitude(const Eigen::Vector3d& target_attitude);
+
+  tf::TransformListener tf_listener_;
 
   std::function<void(std::vector<int>&)> motor_command_callback_;
   inline void setMotorCommandCallback(const std::function<void(std::vector<int>&)> func) {

@@ -59,8 +59,7 @@ int main(int argc, char* argv[]) {
     // if we have acess to VIO Pose, we can execute the exact transect length
     if (feedback_method == FeedbackMethod::POSE) {
       nh_private.param<float>("transect/transect_length", transect_length, 5.0);
-      pose_sub = nh.subscribe<geometry_msgs::PoseStamped>(
-          "pose_topic", 100, &MotionPrimitive::setPose, motion_primitive_.get());
+
     } else {
       nh_private.param<float>("transect/duration", duration, 5.0);
     }
@@ -103,13 +102,6 @@ int main(int argc, char* argv[]) {
 
   std::function<void(const float)> depth_callback =
       std::bind(&MotionPrimitive::setDepth, motion_primitive_.get(), std::placeholders::_1);
-
-  ros::Subscriber attitude_sub = nh.subscribe<sensor_msgs::Imu>(
-      "attitude_topic", 100, &MotionPrimitive::setAttitude, motion_primitive_.get());
-  ros::Subscriber pressure_sub = nh.subscribe<sensor_msgs::FluidPressure>(
-      "pressure_topic",
-      10,
-      std::bind(pressureCallback, std::placeholders::_1, depth_callback, fluid_density));
 
   motion_primitive_->execute(num_of_runs);
   return EXIT_SUCCESS;

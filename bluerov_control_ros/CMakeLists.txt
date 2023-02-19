@@ -10,9 +10,11 @@ find_package(catkin REQUIRED COMPONENTS
             roscpp
             sensor_msgs
             mavros
-            geometry_msgs)
+            geometry_msgs
+            tf2_ros
+            tf)
 
-catkin_package(CATKIN_DEPENDS geometry_msgs roscpp sensor_msgs mavros joy)
+catkin_package(CATKIN_DEPENDS geometry_msgs roscpp sensor_msgs mavros joy tf2_ros tf)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -43,6 +45,9 @@ add_library(bluerov_control
 
 add_executable(bluerov_primitive_node src/bluerov_primitives_node.cpp)
 target_link_libraries(bluerov_primitive_node bluerov_control ${catkin_LIBRARIES})
+
+add_executable(bluerov_tf_broadcaster src/tf_broadcaster.cpp)
+target_link_libraries(bluerov_tf_broadcaster bluerov_control ${catkin_LIBRARIES})
 
 add_executable(bluerov_transect_node src/bluerov_transect_node.cpp)
 target_link_libraries(bluerov_transect_node bluerov_control ${catkin_LIBRARIES})

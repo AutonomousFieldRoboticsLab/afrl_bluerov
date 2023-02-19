@@ -1,6 +1,5 @@
 <launch>
-    <env name="ROSCONSOLE_CONFIG_FILE"
-    value="$(find bluerov_control_ros)/config/rosconsole.conf"/>
+    <env name="ROSCONSOLE_CONFIG_FILE" value="$(find bluerov_control_ros)/config/rosconsole.conf" />
 
     <arg name="environment" default="sea" />
     <arg name="duration" default="30" />
@@ -12,8 +11,6 @@
         <param name="environment" value="$(arg environment)" />
         <param name="feedback_method" value="$(arg feedback_method)" />
 
-        <remap from="attitude_topic" to="/imu_tools/attitude/filtered" />
-        <remap from="pressure_topic" to="/mavros/imu/static_pressure" />
 
     </node>
 </launch>

@@ -28,8 +28,7 @@ void publishRCOverrideCommand(std::vector<int>& pwms) {
   // For the lights
   rc_override.channels[6] = 2000;
 
-  ROS_INFO_STREAM(rc_override);
-  // pub_rc_command.publish(rc_override);
+  pub_rc_command.publish(rc_override);
 }
 
 void arm(ros::NodeHandle& nh, bool state) {
@@ -42,7 +41,7 @@ void arm(ros::NodeHandle& nh, bool state) {
 }
 
 int main(int argc, char* argv[]) {
-  ros::init(argc, argv, "bluerov_transect");
+  ros::init(argc, argv, "bluerov_lawnmower");
 
   ros::NodeHandle nh;
   ros::NodeHandle nh_private("~");
@@ -55,46 +54,22 @@ int main(int argc, char* argv[]) {
 
   FeedbackMethod feedback_method = feedbackMethodFromString(feedback_method_str);
 
-  float transect_length, duration;
+  float strip_length, strip_width, short_strip_duration, long_strip_duration;
   // if we have acess to VIO Pose, we can execute the exact transect length
   if (feedback_method == FeedbackMethod::POSE) {
-    nh_private.param<float>("length", transect_length, 5.0);
+    nh_private.param<float>("strip_length", strip_length, 10.0);
+    nh_private.param<float>("strip_width", strip_width, 3.0);
   } else {
-    nh_private.param<float>("duration", duration, 5.0);
+    nh_private.param<float>("short_strip_duration", short_strip_duration, 5.0);
+    nh_private.param<float>("long_strip_duration", long_strip_duration, 20.0);
   }
-  std::unique_ptr<MotionPrimitive> motion_primitive =
-      std::make_unique<Transect>(transect_length, duration, speed, feedback_method);
+  std::unique_ptr<MotionPrimitive> lawnmower = std::make_unique<LawnMower>(
+      long_strip_duration, short_strip_duration, strip_length, strip_width, speed, feedback_method);
   pub_rc_command = nh.advertise<mavros_msgs::OverrideRCIn>("/mavros/rc/override", 10);
 
   arm(nh, true);
-  motion_primitive->setMotorCommandCallback(&publishRCOverrideCommand);
+  lawnmower->setMotorCommandCallback(&publishRCOverrideCommand);
 
-  // Wait for attitude and depth to be initialized for 10 secs
-  tf::StampedTransform transform;
-  tf::TransformListener tf_listener;
-  try {
-    tf_listener.waitForTransform("world", "bluerov", ros::Time(0), ros::Duration(10.0));
-    tf_listener.lookupTransform("world", "bluerov", ros::Time(0), transform);
-  } catch (tf::TransformException ex) {
-    ROS_ERROR("%s", ex.what());
-    return false;
-  }
-
-  tf::Vector3 origin = transform.getOrigin();
-  tf::Quaternion q = transform.getRotation();
-
-  Eigen::Vector3d initial_rpy;
-  tf::Matrix3x3(q).getRPY(initial_rpy[0], initial_rpy[1], initial_rpy[2]);
-
-  // Execute transect
-  double initial_depth = origin.getZ();
-
-  ROS_INFO_STREAM("Initial Attitude: " << initial_rpy[0] * 180.0 / M_PI << ", "
-                                       << initial_rpy[1] * 180.0 / M_PI << ", "
-                                       << initial_rpy[2] * 180.0 / M_PI);
-  ROS_INFO_STREAM("Initial Depth: " << initial_depth);
-
-  motion_primitive->executeGlobalAttitude(initial_depth,
-                                          initial_rpy - Eigen::Vector3d(0, 0, M_PI_2));
+  lawnmower->execute();
   return EXIT_SUCCESS;
 }

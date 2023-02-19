@@ -1,0 +1,23 @@
+<launch>
+    <env name="ROSCONSOLE_CONFIG_FILE" value="$(find bluerov_control_ros)/config/rosconsole.conf" />
+
+    <arg name="environment" default="sea" />
+    <arg name="long_strip_duration" default="20.0" />
+    <arg name="short_strip_duration" default="5.0" />
+    <arg name="feedback_method" default="attitude_with_depth" />
+
+    <arg name="strip_length" default="10.0" />
+    <arg name="strip_width" default="3.0" />
+
+    <include file="$(find bluerov_control_ros)/launch/bluerov_tf_broadcaster.launch" />
+    <node pkg="bluerov_control_ros" type="bluerov_lawnmower_node" name="bluerov_lawnmower" output="screen">
+        <param name="environment" value="$(arg environment)" />
+        <param name="feedback_method" value="$(arg feedback_method)" />
+
+        <param name="long_strip_duration" value="$(arg long_strip_duration)" />
+        <param name="short_strip_duration" value="$(arg short_strip_duration)" />
+
+        <param name="strip_length" value="$(arg strip_length)" />
+        <param name="strip_width" value="$(arg strip_width)" />
+    </node>
+</launch>

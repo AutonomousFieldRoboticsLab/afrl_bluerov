@@ -1,16 +1,19 @@
 <launch>
 
-<arg name="environment" default="sea"/>
-<arg name="duration" default="30"/>
-<arg name="feedback_method" default="attitude_with_depth"/>
+    <env name="ROSCONSOLE_CONFIG_FILE" value="$(find bluerov_control_ros)/config/rosconsole.conf" />
 
-<node pkg="bluerov_control_ros" type="test_node" name="test" output="screen" >
-        <param name="duration" value="$(arg duration)"/>
-        <param name="environment" value="$(arg environment)"/>
-        <param name="feedback_method" value="$(arg feedback_method)"/>
+    <arg name="environment" default="sea" />
+    <arg name="duration" default="30" />
+    <arg name="feedback_method" default="attitude_with_depth" />
 
-        <remap from="attitude_topic" to="/imu_tools/attitude/filtered"/>
-        <remap from="pressure_topic" to="/mavros/imu/static_pressure"/>
+    <include file="$(find bluerov_control_ros)/launch/bluerov_tf_broadcaster.launch" />
+    <node pkg="bluerov_control_ros" type="test_node" name="test" output="screen">
+        <param name="duration" value="$(arg duration)" />
+        <param name="environment" value="$(arg environment)" />
+        <param name="feedback_method" value="$(arg feedback_method)" />
+
+        <remap from="attitude_topic" to="/imu_tools/attitude/filtered" />
+        <remap from="pressure_topic" to="/mavros/imu/static_pressure" />
 
     </node>
 </launch>

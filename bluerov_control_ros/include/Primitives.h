@@ -85,7 +85,7 @@ class MotionPrimitive {
 
   bool execute(int num_of_runs = 1);
   void executeStraightLine(const double duration, const double depth, const double yaw);
-  void executeGlobalAttitude(const Eigen::Vector3d& target_attitude);
+  void executeGlobalAttitude(const double depth, const Eigen::Vector3d& target_attitude);
 
   tf::TransformListener tf_listener_;
 

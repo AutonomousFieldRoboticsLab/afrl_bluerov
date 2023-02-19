@@ -26,7 +26,7 @@ void publishRCOverrideCommand(std::vector<int>& pwms) {
   rc_override.channels[5] = pwms[5];
 
   // For the lights
-  rc_override.channels[6] = 1800;
+  rc_override.channels[6] = 2000;
   pub_rc_command.publish(rc_override);
 }
 
@@ -54,8 +54,6 @@ int main(int argc, char* argv[]) {
   nh_private.param<float>("speed", speed, 1.0);
 
   FeedbackMethod feedback_method = feedbackMethodFromString(feedback_method_str);
-
-  ros::Subscriber pose_sub;
 
   float transect_length, duration;
   // if we have acess to VIO Pose, we can execute the exact transect length

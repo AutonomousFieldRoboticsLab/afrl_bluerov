@@ -52,6 +52,12 @@ target_link_libraries(bluerov_tf_broadcaster bluerov_control ${catkin_LIBRARIES}
 add_executable(bluerov_transect_node src/bluerov_transect_node.cpp)
 target_link_libraries(bluerov_transect_node bluerov_control ${catkin_LIBRARIES})
 
+add_executable(bluerov_square_node src/bluerov_square_node.cpp)
+target_link_libraries(bluerov_square_node bluerov_control ${catkin_LIBRARIES})
+
+add_executable(bluerov_lawnmower_node src/bluerov_lawnmower_node.cpp)
+target_link_libraries(bluerov_lawnmower_node bluerov_control ${catkin_LIBRARIES})
+
 add_executable(test_node src/test_absolute_orientation.cpp)
 target_link_libraries(test_node bluerov_control ${catkin_LIBRARIES})
 #############

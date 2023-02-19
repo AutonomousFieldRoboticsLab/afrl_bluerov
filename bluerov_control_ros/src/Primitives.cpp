@@ -102,6 +102,7 @@ void MotionPrimitive::executeStraightLine(const double duration,
   ros::Rate rate(10);
   ros::Time start_time = ros::Time::now();
 
+  ROS_INFO_STREAM("Executing straight line for " << duration << " secs");
   while (ros::ok && (ros::Time::now() - start_time).toSec() <= duration) {
     // Wait for attitude and depth to be initialized for 10 secs
     tf::StampedTransform transform;
@@ -127,10 +128,11 @@ void MotionPrimitive::executeStraightLine(const double duration,
     double pitch_speed = utils::angleErrorRadians(0.0, current_rpy[1]) / M_PI;
     double yaw_speed = utils::angleErrorRadians(target_yaw, current_rpy[2]) / M_PI;
 
-    ROS_DEBUG_STREAM("Current depth: " << current_depth);
-    ROS_DEBUG_STREAM("Current RPY: " << current_rpy[0] * 180.0 / M_PI << "\t"
-                                     << current_rpy[1] * 180.0 / M_PI << "\t"
-                                     << current_rpy[2] * 180.0 / M_PI);
+    ROS_DEBUG_STREAM_THROTTLE(5, "Current depth: " << current_depth);
+    ROS_DEBUG_STREAM_THROTTLE(5,
+                              "Current RPY: " << current_rpy[0] * 180.0 / M_PI << "\t"
+                                              << current_rpy[1] * 180.0 / M_PI << "\t"
+                                              << current_rpy[2] * 180.0 / M_PI);
     std::vector<int> motor_pwms = motor_controller_->getMotorPWM(
         {forward_speed, lateral_speed, throttle_speed, roll_speed, pitch_speed, yaw_speed});
     motor_command_callback_(motor_pwms);
@@ -139,22 +141,59 @@ void MotionPrimitive::executeStraightLine(const double duration,
   }
 }
 
-void MotionPrimitive::executeGlobalAttitude(const Eigen::Vector3d& target_attitude) {
-  // Making sure that the attitude is between -pi and pi
-  // TODO(bjoshi): Make sure that this is the correct way to do this
-  // This might backfire if the target attitude is close to pi
+void MotionPrimitive::executeGlobalAttitude(const double target_depth,
+                                            const Eigen::Vector3d& target_rpy) {
+  ros::Rate rate(10);
+  ros::Time start_time = ros::Time::now();
 
-  double forward_speed = 0;
-  double lateral_speed = 0;
-  double throttle_speed = 0;
-  Eigen::Vector3d angular_speed = utils::getAngleError(target_attitude, current_attitude_) / M_PI;
-  std::vector<int> motor_pwms = motor_controller_->getMotorPWM({forward_speed,
-                                                                lateral_speed,
-                                                                throttle_speed,
-                                                                angular_speed[0],
-                                                                angular_speed[1],
-                                                                angular_speed[2]});
-  motor_command_callback_(motor_pwms);
+  ROS_INFO_STREAM("Executing global attitude control with depth: "
+                  << target_depth << " and target RPY : " << target_rpy.transpose() * 180.0 / M_PI
+                  << " deg.");
+
+  while (ros::ok) {
+    // Wait for attitude and depth to be initialized for 10 secs
+    tf::StampedTransform transform;
+
+    try {
+      tf_listener_.lookupTransform("world", "bluerov", ros::Time(0), transform);
+    } catch (tf::TransformException ex) {
+      ROS_ERROR("%s", ex.what());
+      break;
+    }
+
+    double current_depth = transform.getOrigin().getZ();
+    tf::Quaternion q = transform.getRotation();
+
+    Eigen::Vector3d current_rpy;
+    tf::Matrix3x3(q).getRPY(current_rpy[0], current_rpy[1], current_rpy[2]);
+
+    if (utils::getAngleError(target_rpy, current_rpy).norm() <= 10.0 * M_PI / 180.0 ||
+        (ros::Time::now() - start_time).toSec() >= 120.0) {
+      ROS_INFO_STREAM("Attitude reached");
+      break;
+    }
+
+    double forward_speed = 0;
+    double lateral_speed = 0;
+    double throttle_speed = (target_depth - current_depth);
+
+    Eigen::Vector3d angular_speed = utils::getAngleError(target_rpy, current_rpy) / M_PI;
+
+    ROS_DEBUG_STREAM_THROTTLE(5, "Current depth: " << current_depth);
+    ROS_DEBUG_STREAM_THROTTLE(5,
+                              "Current RPY: " << current_rpy[0] * 180.0 / M_PI << "\t"
+                                              << current_rpy[1] * 180.0 / M_PI << "\t"
+                                              << current_rpy[2] * 180.0 / M_PI);
+    std::vector<int> motor_pwms = motor_controller_->getMotorPWM({forward_speed,
+                                                                  lateral_speed,
+                                                                  throttle_speed,
+                                                                  angular_speed[0],
+                                                                  angular_speed[1],
+                                                                  angular_speed[2]});
+    motor_command_callback_(motor_pwms);
+    ros::spinOnce();
+    rate.sleep();
+  }
 }
 
 Transect::Transect() : MotionPrimitive(), length_(5.0), duration_(5.0) {}
@@ -168,8 +207,6 @@ Transect::Transect(float length, float duration, float speed, FeedbackMethod fee
 Transect::~Transect() {}
 
 bool Transect::executeAttitudeFeedback(int num_of_times) {
-  ros::Time start_time = ros::Time::now();
-
   // Wait for attitude and depth to be initialized for 10 secs
   tf::StampedTransform transform;
 
@@ -213,31 +250,42 @@ Square::Square(float length, float duration, float speed, FeedbackMethod feedbac
 Square::~Square() {}
 
 bool Square::executeAttitudeFeedback(int num_of_times) {
-  ros::Time start_time = ros::Time::now();
-  ros::Rate rate(10);
-
   // Wait for attitude and depth to be initialized for 10 secs
-  while (ros::ok() && (!is_attitude_initialized_ || !is_depth_initialized_)) {
-    ros::spinOnce();
-    rate.sleep();
-    if ((ros::Time::now() - start_time).toSec() > 10.0) {
-      ROS_ERROR("Attitude or depth not initialized");
-      return false;
-    }
+  tf::StampedTransform transform;
+
+  try {
+    tf_listener_.waitForTransform("world", "bluerov", ros::Time(0), ros::Duration(10.0));
+    tf_listener_.lookupTransform("world", "bluerov", ros::Time(0), transform);
+  } catch (tf::TransformException ex) {
+    ROS_ERROR("%s", ex.what());
+    return false;
   }
 
-  // Execute square
-  Eigen::Vector3d initial_attitude = current_attitude_;
-  double initial_depth = current_depth_;
+  tf::Vector3 origin = transform.getOrigin();
+  tf::Quaternion q = transform.getRotation();
 
-  executeStraightLine(duration_, initial_depth, initial_attitude[2]);
-  executeGlobalAttitude(initial_attitude + Eigen::Vector3d(0.0, 0.0, M_PI_2));
-  executeStraightLine(duration_, initial_depth, initial_attitude[2] + M_PI_2);
-  executeGlobalAttitude(initial_attitude + Eigen::Vector3d(0.0, 0.0, M_PI));
-  executeStraightLine(duration_, initial_depth, initial_attitude[2] + M_PI);
-  executeGlobalAttitude(initial_attitude + Eigen::Vector3d(0.0, 0.0, 3.0 * M_PI_2));
-  executeStraightLine(duration_, initial_depth, initial_attitude[2] + 3.0 * M_PI_2);
-  executeGlobalAttitude(initial_attitude);
+  Eigen::Vector3d initial_rpy;
+  tf::Matrix3x3(q).getRPY(initial_rpy[0], initial_rpy[1], initial_rpy[2]);
+
+  // Execute transect
+  double initial_depth = origin.getZ();
+
+  ROS_INFO_STREAM("!! Executing Square with Atittude Feedback for " << duration_ << " secs!!");
+  ROS_INFO_STREAM("Initial Attitude: " << initial_rpy[0] * 180.0 / M_PI << ", "
+                                       << initial_rpy[1] * 180.0 / M_PI << ", "
+                                       << initial_rpy[2] * 180.0 / M_PI);
+  ROS_INFO_STREAM("Initial Depth: " << initial_depth);
+
+  // Execute square
+
+  executeStraightLine(duration_, initial_depth, initial_rpy[2]);
+  executeGlobalAttitude(initial_depth, initial_rpy + Eigen::Vector3d(0.0, 0.0, M_PI_2));
+  executeStraightLine(duration_, initial_depth, initial_rpy[2] + M_PI_2);
+  executeGlobalAttitude(initial_depth, initial_rpy + Eigen::Vector3d(0.0, 0.0, M_PI));
+  executeStraightLine(duration_, initial_depth, initial_rpy[2] + M_PI);
+  executeGlobalAttitude(initial_depth, initial_rpy + Eigen::Vector3d(0.0, 0.0, 3.0 * M_PI_2));
+  executeStraightLine(duration_, initial_depth, initial_rpy[2] + 3.0 * M_PI_2);
+  executeGlobalAttitude(initial_depth, initial_rpy);
 
   return true;
 }
@@ -276,4 +324,44 @@ LawnMower::LawnMower(float long_strip_duration,
 LawnMower::~LawnMower() {}
 
 bool LawnMower::executePoseFeedback(int num_times) { return false; };
-bool LawnMower::executeAttitudeFeedback(int num_times) { return false; };
+bool LawnMower::executeAttitudeFeedback(int num_times) {
+  // Wait for attitude and depth to be initialized for 10 secs
+  tf::StampedTransform transform;
+
+  try {
+    tf_listener_.waitForTransform("world", "bluerov", ros::Time(0), ros::Duration(10.0));
+    tf_listener_.lookupTransform("world", "bluerov", ros::Time(0), transform);
+  } catch (tf::TransformException ex) {
+    ROS_ERROR("%s", ex.what());
+    return false;
+  }
+
+  tf::Vector3 origin = transform.getOrigin();
+  tf::Quaternion q = transform.getRotation();
+
+  Eigen::Vector3d initial_rpy;
+  tf::Matrix3x3(q).getRPY(initial_rpy[0], initial_rpy[1], initial_rpy[2]);
+
+  // Execute transect
+  double initial_depth = origin.getZ();
+
+  ROS_INFO_STREAM("!! Executing Lawnmower with Atittude Feedback ");
+  ROS_INFO_STREAM("Initial Attitude: " << initial_rpy[0] * 180.0 / M_PI << ", "
+                                       << initial_rpy[1] * 180.0 / M_PI << ", "
+                                       << initial_rpy[2] * 180.0 / M_PI);
+  ROS_INFO_STREAM("Initial Depth: " << initial_depth);
+
+  // Execute square
+
+  executeStraightLine(long_strip_duration_, initial_depth, initial_rpy[2]);
+  executeGlobalAttitude(initial_depth, initial_rpy + Eigen::Vector3d(0.0, 0.0, M_PI_2));
+  executeStraightLine(short_strip_duration_, initial_depth, initial_rpy[2] + M_PI_2);
+  executeGlobalAttitude(initial_depth, initial_rpy + Eigen::Vector3d(0.0, 0.0, M_PI));
+  executeStraightLine(long_strip_duration_, initial_depth, initial_rpy[2] + M_PI);
+  executeGlobalAttitude(initial_depth, initial_rpy + Eigen::Vector3d(0.0, 0.0, M_PI_2));
+  executeStraightLine(short_strip_duration_, initial_depth, initial_rpy[2] + M_PI_2);
+  executeGlobalAttitude(initial_depth, initial_rpy);
+  executeStraightLine(long_strip_duration_, initial_depth, initial_rpy[2]);
+
+  return true;
+};

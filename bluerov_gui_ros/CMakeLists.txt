@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   message_generation
+  aruco_msgs
 )
 
 
@@ -27,6 +28,7 @@ generate_messages(
    DEPENDENCIES
    std_msgs
    bluerov_gui_ros
+   aruco_msgs
 )
 
 ###################################

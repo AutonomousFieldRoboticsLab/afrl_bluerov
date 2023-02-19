@@ -168,7 +168,7 @@ class BlueROVMenu(GenericMenu):
                 (0, '<<'): '__back__',
                 (1, 'Inc +1 [{}]'.format(self.light)): lambda: self.action_change_light(self.light_step),
                 (2, 'Dec -1 [{}]'.format(self.light)): lambda: self.action_change_light(-self.light_step),
-                (3, f'Reset'): self.action_reset_light,
+                (3, 'Reset'): self.action_reset_light,
             },
 
             (1, 'Square'): {

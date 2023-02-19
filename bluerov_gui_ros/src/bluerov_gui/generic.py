@@ -58,7 +58,7 @@ class GenericMenu:
 
     def __init__(self):
 
-        print "Default menu starting."
+        print ("Default menu starting.")
         rospy.init_node('expmanager')
 
         rospy.wait_for_service('/stereo_rig/ui/menu')

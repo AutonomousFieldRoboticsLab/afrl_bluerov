@@ -5,6 +5,8 @@
     /bluerov/image_raw/compressed
     /mavros/imu/data
     /mavros/imu/data_raw
+    /mavros/imu/static_pressure
+    /mavros/imu/mag
      "/>
 
   <node pkg="rosbag" type="record" name="$(anon record)" args="--output-prefix=$(arg bag.name) $(arg bag.topics)" />

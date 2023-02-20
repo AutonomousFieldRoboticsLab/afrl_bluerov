@@ -5,7 +5,6 @@
     <arg name="duration" default="30" />
     <arg name="feedback_method" default="attitude_with_depth" />
 
-    <include file="$(find bluerov_control_ros)/launch/bluerov_tf_broadcaster.launch" />
     <node pkg="bluerov_control_ros" type="bluerov_transect_node" name="bluerov_transect" output="screen">
         <param name="duration" value="$(arg duration)" />
         <param name="environment" value="$(arg environment)" />

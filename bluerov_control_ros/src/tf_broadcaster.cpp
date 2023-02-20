@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
     pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("pose_topic", 10, &poseCallback);
   }
 
-  ros::Timer timer = nh.createTimer(ros::Duration(0.1), &publishTf);
+  ros::Timer timer = nh.createTimer(ros::Duration(0.05), &publishTf);
 
   while (ros::ok()) {
     ros::spinOnce();

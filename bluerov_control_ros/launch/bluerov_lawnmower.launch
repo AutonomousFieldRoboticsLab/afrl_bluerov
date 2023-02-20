@@ -9,7 +9,6 @@
     <arg name="strip_length" default="10.0" />
     <arg name="strip_width" default="3.0" />
 
-    <include file="$(find bluerov_control_ros)/launch/bluerov_tf_broadcaster.launch" />
     <node pkg="bluerov_control_ros" type="bluerov_lawnmower_node" name="bluerov_lawnmower" output="screen">
         <param name="environment" value="$(arg environment)" />
         <param name="feedback_method" value="$(arg feedback_method)" />

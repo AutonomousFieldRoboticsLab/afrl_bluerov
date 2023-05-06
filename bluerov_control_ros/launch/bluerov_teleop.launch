@@ -1,0 +1,10 @@
+<launch>
+
+	<node pkg="joy" type="joy_node" name="joy" required="True">
+		<param name="autorepeat_rate" value="5" /> <!-- Minimal update rate, Hz -->
+		<param name="default_trig_val" value="true" /> <!-- Special setting for triggers -->
+	</node>
+
+	<node pkg="bluerov_control_ros" type="bluerov_teleop_2.py" name="bluerov_teleop_2" required="True" output="screen">
+	</node>
+</launch>

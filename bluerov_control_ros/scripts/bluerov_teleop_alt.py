@@ -28,12 +28,15 @@ def get_defualt_rc():
 
 
 def arm(state):
-    rospy.wait_for_service("/mavros/cmd/arming")
+    rospy.loginfo("Waiting for arming server ...")
+    rospy.wait_for_service("/mavros/cmd/arming", timeout=5.0)
     try:
         armService = rospy.ServiceProxy("/mavros/cmd/arming", CommandBool)
         armService(state)
+        rospy.loginfo("{} complete.".format("Arming" if state else "Disarming"))
     except rospy.ServiceException as e:
         rospy.loginfo("Service arm call failed: %s" % e)
+
 
 
 def construct_rc_message(channel_values):
@@ -53,10 +56,12 @@ class JoyStick(object):
         self.axes_map = {
             "move_forward": 5, # Left Trigger
             "move_backward": 2, # Right Trigger
-            "move_left_right": 0, # Left thumbstick X-axis
-            "ascend_descend": 1, # Left thumbstick Y-axis
-            "yaw": 3, # Right thumbstick X-axis
-            "pitch": 4, # Right thumbstick Y-axis
+
+            "move_left_right": 3, # Right thumbstick X-axis
+            "ascend_descend": 4, # Right thumbstick Y-axis
+
+            "yaw": 0, # Left thumbstick X-axis
+            "pitch": 1, # Left thumbstick Y-axis
             "lights": 7, # D-pad up-down
         }
 

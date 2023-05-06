@@ -5,6 +5,12 @@
 		<param name="default_trig_val" value="true" /> <!-- Special setting for triggers -->
 	</node>
 
-	<node pkg="bluerov_control_ros" type="bluerov_teleop_2.py" name="bluerov_teleop_2" required="True" output="screen">
+	<node pkg="bluerov_control_ros" type="bluerov_teleop_alt.py" name="bluerov_teleop_2" required="True" output="screen">
 	</node>
+
+  <node pkg="rosbag" type="record" name="bluerov_teleop_record_bag" args="record --all --output-prefix $(env HOME)/bluerov_teleop">
+  </node>
+
+  <node pkg="rviz" type="rviz" name="bluerov_teleop_rviz" args="-d $(find bluerov_control_ros)/config/teleop.rviz">
+  </node>
 </launch>

@@ -64,9 +64,10 @@ target_link_libraries(test_node bluerov_control ${catkin_LIBRARIES})
 ## Install ##
 #############
 
-catkin_install_python(PROGRAMS scripts/bluerov_teleop.py
+catkin_install_python(PROGRAMS scripts/bluerov_teleop.py scripts/bluerov_teleop_alt.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 install(PROGRAMS
    scripts/bluerov_teleop.py
+   scripts/bluerov_teleop_alt.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

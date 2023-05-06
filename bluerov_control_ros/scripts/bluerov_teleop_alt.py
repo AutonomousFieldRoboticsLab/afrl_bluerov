@@ -57,13 +57,14 @@ class JoyStick(object):
             "ascend_descend": 1, # Left thumbstick Y-axis
             "yaw": 3, # Right thumbstick X-axis
             "pitch": 4, # Right thumbstick Y-axis
+            "lights": 7, # D-pad up-down
         }
 
         self.button_map = {
             "disarm": 6, # Back
             "arm": 7, # Start
-            "roll_left": 4, # Left Index button.
-            "roll_right": 5 # Right Index button.
+            "roll_ccw": 4, # Left Index button.
+            "roll_cw": 5 # Right Index button.
         }
 
         self.axes_scale = {
@@ -74,6 +75,7 @@ class JoyStick(object):
 
             "yaw": 1.0,
             "pitch": 1.0,
+            "lights": 1.0,
         }
 
         self.roll_thrust_factor = 0.3
@@ -104,9 +106,15 @@ class JoyStick(object):
         self.max_pwm = 2000.0
         self.min_pwm = 1000.0
 
-        self.light_value = self.min_pwm
-        self.light_steps = 4
-        self.light_button = 0.0
+        self.light_pwm_min = 1000
+        self.light_pwm_max = 2000
+
+        # PWM control does not work for now.
+        # self.light_max_step = 4
+        self.light_max_step = 1
+
+        self.light_curr_step = 0
+        self.light_axis_last_value = None
 
         self.move_forward_initialized = False
         self.move_backward_initialized = False
@@ -165,9 +173,9 @@ class JoyStick(object):
 
 
         roll = 0.0
-        if self.get_buttons(joy_msg, "roll_left") > 0.0:
+        if self.get_buttons(joy_msg, "roll_ccw") > 0.0:
             roll = 1.0 * self.roll_thrust_factor
-        elif self.get_buttons(joy_msg, "roll_right") > 0.0:
+        elif self.get_buttons(joy_msg, "roll_cw") > 0.0:
             roll = -1.0 * self.roll_thrust_factor
 
         pitch = 0.0
@@ -196,18 +204,21 @@ class JoyStick(object):
         rc_command.channels = [int(x) for x in rc_command.channels]
 
         # Handle lights
+        # --------------------------------------------------------------,
+        light_axis_value = self.get_axis(joy_msg, "lights")
+        if (self.light_axis_last_value is None) or (self.light_axis_last_value != light_axis_value):
+            if light_axis_value > 0.0:
+                self.light_curr_step += 1
+            elif light_axis_value < 0.0:
+                self.light_curr_step -= 1
 
-        # light = self.get_axis(joy_msg, "lights")
-        # if light != self.light_button:
-        #     self.light_button = light
-        #     if light != 0.0:
-        #         self.get_light_intensity(light)
+            self.light_curr_step = np.clip(self.light_curr_step, 0, self.light_max_step)
+            self.light_axis_last_value = light_axis_value
 
-        # self.light_value = np.clip(self.light_value, self.min_pwm, self.max_pwm)
-
-        # print('Light: {}'.format(self.light_value))
-
-        # rc_command.channels[6] = int(self.light_value)
+        light_value = self.get_light_intensity()
+        # rospy.loginfo('Light: %s', light_value)
+        rc_command.channels[6] = int(light_value)
+        # --------------------------------------------------------------'
 
         self.override_pub.publish(rc_command)
 
@@ -243,9 +254,9 @@ class JoyStick(object):
 
         return normalized_intensities
 
-    def get_light_intensity(self, joy_input):
-        step = (self.max_pwm - self.min_pwm) / self.light_steps
-        self.light_value = self.light_value + joy_input * step
+    def get_light_intensity(self):
+        intensity_range = (self.light_pwm_max - self.light_pwm_min)
+        return self.light_pwm_min + (self.light_curr_step * intensity_range) / self.light_max_step
 
 
 if __name__ == "__main__":

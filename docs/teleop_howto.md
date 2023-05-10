@@ -33,8 +33,8 @@ with `ping brov` and vice versa.
 ## Running nodes in host computer
 
 The teleop will work only if all required nodes are running inside the
-robot. Check if `rostopic list` has a bunch of topics with prefix - 
-`/bluerov/` and `/mavros`. If not, go into appropriate workspace and
+robot. Check if `rostopic list` has a bunch of topics with prefix -
+`/bluerov/` and `/mavros/`. If not, go into appropriate workspace and
 spawn the nodes with -
 
 ```
@@ -46,24 +46,28 @@ roslaunch bluerov_bringup bluerov_bringup.launch
 
 - Connect the Joystick dongle to the remote computer.
 - If a green led is turned on, press the __mode__ button
-  to turn it off.  
+  to turn it off.
 - Set the input-mode slider to `x`, NOT `d`. This configures
   the joystick to use X-input mode which let's us use the analog
   triggers as another set of analog axis.
 - To check if the joystick is working start `jstest /dev/input/js0`
-  into a terminal and see if the values are changing with keypress.
+  into a terminal and see if the values are changing with key-press.
 
 
 ## Running nodes in remote computer
 
 - Open a terminal.
-- Setup two environment variables:
+- Setup two environment variables with:
+
   ```
 export ROS_HOSTNAME=<remote_computer_name>
 export ROS_MASTER_URI=http://brov:11311/
+
   ```
+
 - Go into catkin workspace and activate the developer environment.
-- Start the telop node with `roslaunch bluerov_control_ros bluerov_teleop.launch`.  This should spawn an `rviz` instance showing the camera feed.
+- Start the teleop node with `roslaunch bluerov_control_ros bluerov_teleop.launch`. 
+  This should spawn an `rviz` instance showing the camera feed.
   The node also starts a bag recorder that dumps timestamped bagfile
   into the home directory with name prefix - `bluerov_teleop`.
 

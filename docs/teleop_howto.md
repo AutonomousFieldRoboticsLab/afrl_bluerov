@@ -59,11 +59,10 @@ roslaunch bluerov_bringup bluerov_bringup.launch
 - Open a terminal.
 - Setup two environment variables with:
 
-  ```
+```
 export ROS_HOSTNAME=<remote_computer_name>
 export ROS_MASTER_URI=http://brov:11311/
-
-  ```
+```
 
 - Go into catkin workspace and activate the developer environment.
 - Start the teleop node with `roslaunch bluerov_control_ros bluerov_teleop.launch`. 
